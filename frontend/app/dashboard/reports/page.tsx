@@ -16,18 +16,22 @@ export default function AttendanceReports() {
     const [endDate, setEndDate] = useState("");
     const [attendance, setAttendance] = useState<Attendance[]>([]);
     const [error, setError] = useState("");
-    const [session, setSession] = useState("");
+    const [session, setSession] = useState(""); // Default to all sessions
+        const [dateFormat, setDateFormat] = useState("DD MMM YYYY");
 
+    // Fetch Attendance
     const fetchAttendance = async () => {
         if (!startDate || !endDate) {
             alert("Please select a start and end date.");
             return;
         }
 
-        try {
-            const res = await fetch(`http://localhost:5000/api/attendance/?start=${startDate}&end=${endDate}`);
-            if (!res.ok) throw new Error("Failed to fetch attendance.");
+        let url = `http://localhost:5000/api/attendance/?start=${startDate}&end=${endDate}`;
+        if (session) url += `&session=${session}`;
 
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Failed to fetch attendance.");
             const data = await res.json();
             setAttendance(data);
             setError(""); // Clear errors if successful
@@ -37,23 +41,34 @@ export default function AttendanceReports() {
         }
     };
 
-    const fetchCSV = async () => {
+    // Export CSV
+    const fetchCSV = () => {
         if (!startDate || !endDate) {
             alert("Please select both start and end dates.");
             return;
         }
 
         let csvUrl = `http://localhost:5000/api/attendance/export?start=${startDate}&end=${endDate}`;
-        if (session) {
-            csvUrl += `&session=${session}`;
-        }
+        if (session) csvUrl += `&session=${session}`;
 
-        // Trigger the file download
-        window.location.href = `http://localhost:5000/api/attendance/export?start=${startDate}&end=${endDate}&session=${session}`;
+        window.open(csvUrl, "_blank"); // Open in a new tab for download
     };
 
-    const handleExportPDF = async () => {
-        const response = await fetch(`http://localhost:5000/api/attendance/export/pdf?start=${startDate}&end=${endDate}`);
+    // Export PDF
+    const handleExportPDF = () => {
+        if (!startDate || !endDate) {
+            alert("Please select start and end dates.");
+            return;
+        }
+
+        let pdfUrl = `http://localhost:5000/api/attendance/export/pdf?start=${startDate}&end=${endDate}`;
+        if (session) pdfUrl += `&session=${session}`;
+
+        window.open(pdfUrl, "_blank"); // Open in new tab for download
+    };
+
+        const fetchPDF = async () => {
+        const response = await fetch(`http://localhost:5000/api/attendance/export/pdf?start=${startDate}&end=${endDate}&session=${session}&format=${dateFormat}`);
         if (response.ok) {
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
@@ -67,8 +82,6 @@ export default function AttendanceReports() {
             alert("Failed to export PDF");
         }
     };
-    
-    
 
     return (
         <DashboardLayout>
@@ -77,6 +90,15 @@ export default function AttendanceReports() {
             <div className="mt-4 flex space-x-2">
                 <input type="date" className="border p-2" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                 <input type="date" className="border p-2" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+
+                {/* Session Filter Dropdown */}
+                <select className="border p-2" value={session} onChange={(e) => setSession(e.target.value)}>
+                    <option value="">All Sessions</option>
+                    <option value="morning">Morning</option>
+                    <option value="afternoon">Afternoon</option>
+                    <option value="evening">Evening</option>
+                </select>
+
                 <button onClick={fetchAttendance} className="bg-blue-500 text-white px-4 py-2 rounded">Fetch Reports</button>
             </div>
 
@@ -96,8 +118,11 @@ export default function AttendanceReports() {
                     <p className="text-gray-500">No attendance records found.</p>
                 )}
             </ul>
-    <button onClick={handleExportPDF} className="bg-red-500 text-white px-4 py-2 rounded">Export PDF</button>
-    <button onClick={fetchCSV} className="bg-green-500 text-white px-4 py-2 rounded">📥 Export CSV</button>
+
+            <div className="mt-4 space-x-2">
+                <button onClick={handleExportPDF} className="bg-red-500 text-white px-4 py-2 rounded">📄 Export PDF</button>
+                <button onClick={fetchCSV} className="bg-green-500 text-white px-4 py-2 rounded">📥 Export CSV</button>
+            </div>
         </DashboardLayout>
     );
 }
