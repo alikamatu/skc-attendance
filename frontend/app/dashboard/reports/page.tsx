@@ -49,8 +49,27 @@ export default function AttendanceReports() {
         }
 
         // Trigger the file download
-        window.open(csvUrl, "_blank");
+        window.location.href = `http://localhost:5000/api/attendance/export?start=${startDate}&end=${endDate}&session=${session}`;
     };
+
+    const handleExportPDF = async () => {
+        const response = await fetch(`http://localhost:5000/api/attendance/export/pdf?start=${startDate}&end=${endDate}`);
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "attendance_report.pdf";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } else {
+            alert("Failed to export PDF");
+        }
+    };
+    
+    
+
     return (
         <DashboardLayout>
             <h2 className="text-2xl font-bold">📅 Attendance Reports</h2>
@@ -77,7 +96,8 @@ export default function AttendanceReports() {
                     <p className="text-gray-500">No attendance records found.</p>
                 )}
             </ul>
-            <button onClick={fetchCSV} className="bg-green-500 text-white px-4 py-2 rounded">📥 Export CSV</button>
+    <button onClick={handleExportPDF} className="bg-red-500 text-white px-4 py-2 rounded">Export PDF</button>
+    <button onClick={fetchCSV} className="bg-green-500 text-white px-4 py-2 rounded">📥 Export CSV</button>
         </DashboardLayout>
     );
 }
