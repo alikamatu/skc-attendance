@@ -60,19 +60,66 @@ const registerAdmin = async (req, res) => {
   }
 };
 
-const addStudent = async (req, res) => {
-    const { name } = req.body;
-  
+
+const getStudent = async (req, res) => {
     try {
-      const newStudent = await pool.query(
-        "INSERT INTO students (name) VALUES ($1) RETURNING *",
-        [name]
-      );
-      res.status(201).json(newStudent.rows[0]);
+        const { session, page = 1, limit = 10 } = req.query; // Default pagination values
+        const offset = (page - 1) * limit;
+        let query = "SELECT * FROM students";
+        let values = [];
+
+        // Add filtering if session is provided
+        if (session) {
+            query += " WHERE session = $1";
+            values.push(session);
+        }
+
+        // Add pagination (use correct index for parameters)
+        if (values.length > 0) {
+            query += " ORDER BY id ASC LIMIT $2 OFFSET $3";
+            values.push(limit, offset);
+        } else {
+            query += " ORDER BY id ASC LIMIT $1 OFFSET $2";
+            values.push(limit, offset);
+        }
+
+        console.log("Executing query:", query, "with values:", values);
+        const result = await pool.query(query, values);
+        res.json(result.rows);
     } catch (error) {
-      res.status(500).json({ message: "Server error" });
+        console.error("❌ Error fetching students:", error);
+        res.status(500).json({ message: "Server error" });
     }
-  };
+};
+
+
+const addStudent = async (req, res) => {
+    try {
+        const { name, session } = req.body;
+        
+        if (!name || !session) {
+            return res.status(400).json({ message: "Name and session are required" });
+        }
+
+        const allowedSessions = ["morning", "afternoon", "evening"];
+        const normalizedSession = session.toLowerCase(); // Convert to lowercase
+
+        if (!allowedSessions.includes(normalizedSession)) {
+            return res.status(400).json({ message: "Invalid session. Allowed values: morning, afternoon, evening" });
+        }
+
+        const query = "INSERT INTO students (name, session) VALUES ($1, $2) RETURNING *";
+        const values = [name, normalizedSession];
+
+        const result = await pool.query(query, values);
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error("❌ Error adding student:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+
   
   // 🔹 Remove a student  
   const removeStudent = async (req, res) => {
@@ -120,4 +167,4 @@ const addStudent = async (req, res) => {
   };
 
 
-module.exports = { loginAdmin, registerAdmin, addStudent, removeStudent, getAttendanceReport, getAttendanceStats };
+module.exports = { loginAdmin, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats };
