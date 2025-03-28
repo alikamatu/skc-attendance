@@ -44,12 +44,19 @@ export default function ManageStudents() {
             alert(`Error: ${error.message}`);
         }
     };
-    
 
-    // Delete Student
+    // Delete Student with Confirmation
     const handleDeleteStudent = async (id: number) => {
-        await fetch(`http://localhost:5000/api/students/${id}`, { method: "DELETE" });
-        setStudents(students.filter((student) => student.id !== id));
+        const confirmDelete = window.confirm("Are you sure you want to delete this student?");
+        if (!confirmDelete) return;
+
+        const response = await fetch(`http://localhost:5000/api/students/${id}`, { method: "DELETE" });
+
+        if (response.ok) {
+            setStudents(students.filter((student) => student.id !== id));
+        } else {
+            alert("Failed to delete student.");
+        }
     };
 
     return (
@@ -64,17 +71,18 @@ export default function ManageStudents() {
                     onChange={(e) => setName(e.target.value)}
                 />
                 <select className="border p-2 mr-2" value={session} onChange={(e) => setSession(e.target.value)}>
-                    <option>Morning</option>
-                    <option>Afternoon</option>
-                    <option>Evening</option>
+                    <option value="">Select Session</option>
+                    <option value="morning">Morning</option>
+                    <option value="afternoon">Afternoon</option>
+                    <option value="evening">Evening</option>
                 </select>
                 <button onClick={handleAddStudent} className="bg-blue-500 text-white px-4 py-2 rounded">Add Student</button>
             </div>
 
-            <h2 className="text-2xl font-bold">👨‍🎓 Students</h2>
+            <h2 className="text-2xl font-bold mt-4">👨‍🎓 Students</h2>
 
             {/* Filter by session */}
-            <select value={session} onChange={(e) => setSession(e.target.value)}>
+            <select value={session} onChange={(e) => setSession(e.target.value)} className="mt-2 p-2 border">
                 <option value="">All Sessions</option>
                 <option value="morning">Morning</option>
                 <option value="afternoon">Afternoon</option>
@@ -84,16 +92,24 @@ export default function ManageStudents() {
             {/* Student List */}
             <ul className="mt-4">
                 {students.map((student) => (
-                    <li key={student.id} className="p-2 border-b">
-                        {student.name} - {student.session}
+                    <li key={student.id} className="p-2 border-b flex justify-between items-center">
+                        <span>{student.name} - {student.session}</span>
+                        <button 
+                            onClick={() => handleDeleteStudent(student.id)} 
+                            className="bg-red-500 text-white px-3 py-1 rounded"
+                        >
+                            Delete
+                        </button>
                     </li>
                 ))}
             </ul>
 
             {/* Pagination Controls */}
-            <button disabled={page === 1} onClick={() => setPage(page - 1)}>Previous</button>
-            <span> Page {page} </span>
-            <button onClick={() => setPage(page + 1)}>Next</button>
+            <div className="mt-4">
+                <button disabled={page === 1} onClick={() => setPage(page - 1)} className="bg-gray-300 p-2 mr-2">Previous</button>
+                <span> Page {page} </span>
+                <button onClick={() => setPage(page + 1)} className="bg-gray-300 p-2 ml-2">Next</button>
+            </div>
         </DashboardLayout>
     );
 }
