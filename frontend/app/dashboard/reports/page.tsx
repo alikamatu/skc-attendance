@@ -16,6 +16,7 @@ export default function AttendanceReports() {
     const [endDate, setEndDate] = useState("");
     const [attendance, setAttendance] = useState<Attendance[]>([]);
     const [error, setError] = useState("");
+    const [session, setSession] = useState("");
 
     const fetchAttendance = async () => {
         if (!startDate || !endDate) {
@@ -24,7 +25,7 @@ export default function AttendanceReports() {
         }
 
         try {
-            const res = await fetch(`http://localhost:5000/api/attendance?start=${startDate}&end=${endDate}`);
+            const res = await fetch(`http://localhost:5000/api/attendance/?start=${startDate}&end=${endDate}`);
             if (!res.ok) throw new Error("Failed to fetch attendance.");
 
             const data = await res.json();
@@ -36,6 +37,20 @@ export default function AttendanceReports() {
         }
     };
 
+    const fetchCSV = async () => {
+        if (!startDate || !endDate) {
+            alert("Please select both start and end dates.");
+            return;
+        }
+
+        let csvUrl = `http://localhost:5000/api/attendance/export?start=${startDate}&end=${endDate}`;
+        if (session) {
+            csvUrl += `&session=${session}`;
+        }
+
+        // Trigger the file download
+        window.open(csvUrl, "_blank");
+    };
     return (
         <DashboardLayout>
             <h2 className="text-2xl font-bold">📅 Attendance Reports</h2>
@@ -62,6 +77,7 @@ export default function AttendanceReports() {
                     <p className="text-gray-500">No attendance records found.</p>
                 )}
             </ul>
+            <button onClick={fetchCSV} className="bg-green-500 text-white px-4 py-2 rounded">📥 Export CSV</button>
         </DashboardLayout>
     );
 }
