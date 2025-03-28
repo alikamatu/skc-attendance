@@ -1,11 +1,13 @@
 "use client";
 import DashboardLayout from "@/app/components/DashboardLayout";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface Attendance {
     id: number;
     student_name: string;
     date: string;
+    signed_in_at: string | null;
+    signed_out_at: string | null;
     status: string;
 }
 
@@ -24,7 +26,7 @@ export default function AttendanceReports() {
         try {
             const res = await fetch(`http://localhost:5000/api/attendance?start=${startDate}&end=${endDate}`);
             if (!res.ok) throw new Error("Failed to fetch attendance.");
-            
+
             const data = await res.json();
             setAttendance(data);
             setError(""); // Clear errors if successful
@@ -51,7 +53,9 @@ export default function AttendanceReports() {
                 {attendance.length > 0 ? (
                     attendance.map((record) => (
                         <li key={record.id} className="p-2 border-b">
-                            {record.student_name} - {record.date} ({record.status})
+                            {record.student_name} - {record.date} ({record.status})  
+                            <br />
+                            Signed In: {record.signed_in_at || "N/A"} | Signed Out: {record.signed_out_at || "N/A"}
                         </li>
                     ))
                 ) : (
