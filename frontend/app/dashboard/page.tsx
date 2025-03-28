@@ -1,143 +1,120 @@
 "use client";
+import { useState, useEffect } from "react";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Bar, Pie } from 'react-chartjs-2';
-import { Chart, registerables } from 'chart.js';
-import { format, subDays } from 'date-fns';
+const AdminDashboard = () => {
+  const [students, setStudents] = useState([]);
+  const [newStudent, setNewStudent] = useState("");
+  const [report, setReport] = useState([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [stats, setStats] = useState([]);
 
-Chart.register(...registerables);
-
-export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    totalStudents: 0,
-    presentToday: 0,
-    absentToday: 0,
-    attendanceRate: 0,
-  });
-  const [dateRange, setDateRange] = useState({
-    start: subDays(new Date(), 7),
-    end: new Date(),
-  });
-
-  // Fetch stats from API
+  // 🔹 Fetch Students List
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/admin/stats', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        const data = await response.json();
-        setStats(data);
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      }
-    };
-    fetchStats();
+    fetch("http://localhost:5000/api/students")
+      .then(res => res.json())
+      .then(data => setStudents(data));
   }, []);
 
-  const attendanceData = {
-    labels: ['Morning', 'Afternoon', 'Evening'],
-    datasets: [
-      {
-        label: 'Attendance by Session',
-        data: [65, 59, 80], // Replace with actual data
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
-      },
-    ],
+  // 🔹 Add Student
+  const handleAddStudent = async () => {
+    if (!newStudent) return;
+
+    const res = await fetch("http://localhost:5000/api/admin/students", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newStudent }),
+    });
+
+    if (res.ok) {
+      const student = await res.json();
+      setStudents([...students, student]);
+      setNewStudent("");
+    }
   };
 
+  // 🔹 Remove Student
+  const handleRemoveStudent = async (id) => {
+    const res = await fetch(`http://localhost:5000/api/admin/students/${id}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      setStudents(students.filter(student => student.id !== id));
+    }
+  };
+
+  // 🔹 Generate Attendance Report
+  const generateReport = async () => {
+    const res = await fetch(`http://localhost:5000/api/admin/attendance/report?startDate=${startDate}&endDate=${endDate}`);
+    if (res.ok) {
+      const data = await res.json();
+      setReport(data);
+    }
+  };
+
+  // 🔹 Fetch Attendance Stats
+  useEffect(() => {
+    fetch("http://localhost:5000/api/admin/attendance/stats")
+      .then(res => res.json())
+      .then(data => setStats(data));
+  }, []);
+
   return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="p-6"
-      >
-        <h1 className="text-2xl font-bold mb-6">Dashboard Overview</h1>
-        
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <StatCard 
-            title="Total Students" 
-            value={stats.totalStudents} 
-            icon="👥" 
-          />
-          <StatCard 
-            title="Present Today" 
-            value={stats.presentToday} 
-            icon="✅" 
-          />
-          <StatCard 
-            title="Absent Today" 
-            value={stats.absentToday} 
-            icon="❌" 
-          />
-          <StatCard 
-            title="Attendance Rate" 
-            value={`${stats.attendanceRate}%`} 
-            icon="📊" 
-          />
-        </div>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4">Attendance by Session</h2>
-            <Bar data={attendanceData} />
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4">Session Distribution</h2>
-            <Pie data={attendanceData} />
-          </div>
-        </div>
-
-        {/* Date Range Selector */}
-        <div className="bg-white p-4 rounded-lg shadow mb-6">
-          <h2 className="text-lg font-semibold mb-4">Generate Report</h2>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">From</label>
-              <input
-                type="date"
-                value={format(dateRange.start, 'yyyy-MM-dd')}
-                onChange={(e) => setDateRange({...dateRange, start: new Date(e.target.value)})}
-                className="p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">To</label>
-              <input
-                type="date"
-                value={format(dateRange.end, 'yyyy-MM-dd')}
-                onChange={(e) => setDateRange({...dateRange, end: new Date(e.target.value)})}
-                className="p-2 border rounded"
-              />
-            </div>
-            <button className="mt-6 md:mt-0 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-              Generate Report
-            </button>
-          </div>
-        </div>
-      </motion.div>
-  );
-}
-
-function StatCard({ title, value, icon }: { title: string; value: string | number; icon: string }) {
-  return (
-    <motion.div 
-      whileHover={{ scale: 1.03 }}
-      className="bg-white p-4 rounded-lg shadow"
-    >
-      <div className="flex justify-between items-center">
-        <div>
-          <p className="text-gray-500 text-sm">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
-        </div>
-        <span className="text-3xl">{icon}</span>
+      {/* ➕ Add Student */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Student Name"
+          value={newStudent}
+          onChange={(e) => setNewStudent(e.target.value)}
+          className="border p-2 rounded mr-2"
+        />
+        <button onClick={handleAddStudent} className="bg-green-500 text-white px-4 py-2 rounded">Add Student</button>
       </div>
-    </motion.div>
+
+      {/* 🗑️ Students List */}
+      <ul className="mb-6">
+        {students.map((student) => (
+          <li key={student.id} className="flex justify-between bg-gray-100 p-2 mb-2 rounded">
+            {student.name}
+            <button onClick={() => handleRemoveStudent(student.id)} className="bg-red-500 text-white px-3 py-1 rounded">Remove</button>
+          </li>
+        ))}
+      </ul>
+
+      {/* 📊 Attendance Report */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-2">Generate Attendance Report</h2>
+        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border p-2 rounded mr-2" />
+        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border p-2 rounded mr-2" />
+        <button onClick={generateReport} className="bg-blue-500 text-white px-4 py-2 rounded">Generate</button>
+
+        <ul className="mt-4">
+          {report.map((record, index) => (
+            <li key={index} className="bg-gray-100 p-2 rounded mb-2">
+              {record.name} - {record.date} ({record.status})
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* 📈 Attendance Stats */}
+      <div>
+        <h2 className="text-xl font-bold mb-2">Attendance Stats</h2>
+        <ul>
+          {stats.map((stat, index) => (
+            <li key={index} className="bg-gray-100 p-2 rounded mb-2">
+              {stat.name}: {stat.total_present} days present
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
-}
+};
+
+export default AdminDashboard;
