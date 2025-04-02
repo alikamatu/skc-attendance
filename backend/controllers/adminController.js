@@ -119,9 +119,6 @@ const addStudent = async (req, res) => {
     }
 };
 
-
-  
-  // 🔹 Remove a student  
   const removeStudent = async (req, res) => {
     const { id } = req.params;
   
@@ -133,7 +130,6 @@ const addStudent = async (req, res) => {
     }
   };
   
-  // 🔹 Generate attendance report  
   const getAttendanceReport = async (req, res) => {
     const { startDate, endDate } = req.query;
   
@@ -150,7 +146,6 @@ const addStudent = async (req, res) => {
     }
   };
   
-  // 🔹 Get Attendance Stats  
   const getAttendanceStats = async (req, res) => {
     try {
       const stats = await pool.query(

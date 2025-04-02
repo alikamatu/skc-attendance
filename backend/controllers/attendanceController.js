@@ -218,16 +218,16 @@ const exportAttendanceCSV = async (req, res) => {
 
 const postAttendance = async (req, res) => {
     try {
-        const { student_id, action } = req.body;
+        const { student_id, name, action } = req.body;
 
-        if (!student_id || !action) {
-            return res.status(400).json({ error: "Missing student_id or action" });
+        if (!student_id || !name || !action) {
+            return res.status(400).json({ error: "Missing student_id, name, or action" });
         }
 
         if (action === "sign-in") {
             await pool.query(
-                "INSERT INTO attendance (student_id, date, status, signed_in_at) VALUES ($1, CURRENT_DATE, 'present', NOW())",
-                [student_id]
+                "INSERT INTO attendance (student_id, date, status, signed_in_at, name) VALUES ($1, CURRENT_DATE, 'present', NOW(), $2)",
+                [student_id, name]
             );
         } else if (action === "sign-out") {
             await pool.query(

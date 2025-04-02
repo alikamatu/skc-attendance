@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const API_URL = "http://localhost:5000/api/attendance";
-const STUDENTS_API = "http://localhost:5000/api/students/fetch"; // Fetch students from DB
+const STUDENTS_API = "http://localhost:5000/api/students/fetch"; 
 
 export default function AttendanceForm() {
   const [students, setStudents] = useState<{ id: number; name: string }[]>([]);
@@ -11,16 +11,14 @@ export default function AttendanceForm() {
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [signOutId, setSignOutId] = useState<number | null>(null);
   const [attendance, setAttendance] = useState<{ id: number; name: string; signInTime: string; signOutTime?: string }[]>([]);
-  const [signOutName, setSignOutName] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
-    // Fetch students from the API
     const fetchStudents = async () => {
       try {
         const response = await fetch(STUDENTS_API);
         if (!response.ok) throw new Error("Failed to fetch students.");
         const data = await response.json();
-        setStudents(data); // Ensure `data` is an array of `{ id, name }`
+        setStudents(data); 
       } catch (error) {
         console.error("Error fetching students:", error);
       }
@@ -30,51 +28,56 @@ export default function AttendanceForm() {
   }, []);
 
   const handleSignIn = async () => {
-    if (selectedUser) {
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            student_id: selectedUser,
-            status: "Present",
-            action: "sign-in",
-          }),
-        });
+      if (selectedUser) {
+          const selectedStudent = students.find(student => student.id === selectedUser);
+          if (!selectedStudent) return;
   
-        if (!response.ok) throw new Error("Failed to sign in");
-        setSignedInUsers([...signedInUsers, selectedUser]);
-        setAttendance([...attendance, { name: selectedUser, signInTime: new Date().toLocaleTimeString() }]);
-        setSelectedUser(null);
-      } catch (error) {
-        console.error("Sign-in failed:", error);
+          try {
+              const response = await fetch(API_URL, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                      student_id: selectedUser,
+                      name: selectedStudent.name, // Pass the name of the student
+                      action: "sign-in",
+                  }),
+              });
+  
+              if (!response.ok) throw new Error("Failed to sign in");
+  
+              setSignedInUsers([...signedInUsers, selectedUser]);
+              setAttendance([
+                  ...attendance,
+                  { id: selectedUser, name: selectedStudent.name, signInTime: new Date().toLocaleTimeString() },
+              ]);
+              setSelectedUser(null);
+          } catch (error) {
+              console.error("Sign-in failed:", error);
+          }
       }
-    }
   };
   
 
 const handleSignOut = async () => {
-  if (signOutId) {  // Ensure a valid student ID is selected
+  if (signOutId) {  
     try {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          student_id: signOutId,  // Use the selected ID instead of signOutName
+          student_id: signOutId,
           action: "sign-out",
         }),
       });
 
       if (!response.ok) throw new Error("Failed to sign out");
 
-      // Update the attendance list
       setAttendance(attendance.map((record) =>
         record.id === signOutId && !record.signOutTime
           ? { ...record, signOutTime: new Date().toLocaleTimeString() }
           : record
       ));
 
-      // Remove from signed-in users
       setSignedInUsers(signedInUsers.filter(id => id !== signOutId));
 
       setSignOutId(null); // Reset selection
