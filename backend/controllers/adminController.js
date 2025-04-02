@@ -217,32 +217,38 @@ const addStudent = async (req, res) => {
     }
 };
 
-function getCurrentDate() {
-  return new Date().toISOString().split('T')[0];
-}
-
 const getTodayAttendance = async (req, res) => {
-  try {
-    const today = getCurrentDate();
-    const result = await pool.query(
-      `SELECT a.student_id as id, a.name, 
-              TO_CHAR(a.time, 'HH24:MI') as "signInTime",
-              (SELECT TO_CHAR(b.time, 'HH24:MI') 
-               FROM attendance b 
-               WHERE b.student_id = a.student_id 
-               AND b.date = a.date 
-               AND b.action = 'sign-out') as "signOutTime",
-              a.date
-       FROM attendance a
-       WHERE a.date = $1 AND a.action = 'sign-in'
-       ORDER BY a.time DESC`,
-      [today]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+    try {
+        const query = `
+            SELECT id, student_id, name, signed_in_at AS "signInTime", signed_out_at AS "signOutTime", date
+            FROM attendance
+            WHERE date = CURRENT_DATE
+            ORDER BY signed_in_at ASC
+        `;
+        const { rows } = await pool.query(query);
+
+        const categorized = {
+            morning: [],
+            afternoon: [],
+            evening: [],
+        };
+
+        rows.forEach((record) => {
+            const hour = new Date(record.signInTime).getHours();
+            if (hour >= 6 && hour < 12) {
+                categorized.morning.push(record);
+            } else if (hour >= 12 && hour < 18) {
+                categorized.afternoon.push(record);
+            } else {
+                categorized.evening.push(record);
+            }
+        });
+
+        res.json(categorized);
+    } catch (error) {
+        console.error("Error fetching today's attendance:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 };
 
 module.exports = { loginAdmin, getTodayAttendance, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats, changePassword, getStudentsBySession };

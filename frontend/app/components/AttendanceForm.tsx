@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const API_URL = "http://localhost:5000/api/attendance";
 const STUDENTS_API = "http://localhost:5000/api/students/students-by-session"; 
-const TODAYS_ATTENDANCE_API = "http://localhost:5000/api/attendance/today";
+const TODAYS_ATTENDANCE_API = "http://localhost:5000/api/admin/attendance/today";
 
 export default function AttendanceForm() {
   const [students, setStudents] = useState<{ id: number; name: string }[]>([]);
@@ -22,7 +22,7 @@ export default function AttendanceForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentDate] = useState(new Date().toISOString().split('T')[0]);
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setIsLoading(true);
@@ -43,7 +43,7 @@ export default function AttendanceForm() {
         // Update signed-in users based on attendance data
         const signedIn = flattenedAttendance
           .filter((record: any) => !record.signOutTime)
-          .map((record: any) => record.student_id);
+          .map((record: any) => record.id);
         setSignedInUsers(signedIn);
   
         // Fetch students for the current session
@@ -59,9 +59,9 @@ export default function AttendanceForm() {
     };
   
     fetchInitialData();
-  }, [session]);
+  }, [session]); // Re-run when session changes
 
-  
+  // Handle sign in
   const handleSignIn = async () => {
     if (selectedUser) {
       setIsLoading(true);

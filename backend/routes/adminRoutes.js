@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../config/db");
-const { loginAdmin, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats, changePassword } = require("../controllers/adminController");
+const { loginAdmin, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats, changePassword, getTodayAttendance } = require("../controllers/adminController");
 
 
 router.post("/login", loginAdmin);
@@ -11,6 +11,7 @@ router.post("/students/fetch", getStudent);
 router.delete("/students/:id", removeStudent);  
 router.get("/attendance/report", getAttendanceReport); 
 router.get("/attendance/stats", getAttendanceStats); 
+router.get("/attendance/today", getTodayAttendance); 
 router.get("/stats", async (req, res) => {
   try {
     const totalStudents = await pool.query("SELECT COUNT(*) FROM students");
