@@ -210,7 +210,7 @@ export default function Dashboard() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 lg:col-span-2"
+                className="p-6 lg:col-span-2"
               >
                 <h3 className="text-lg font-semibold mb-4 text-gray-800">
                   Attendance Overview

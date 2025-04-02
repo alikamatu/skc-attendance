@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter for navigation
 import { 
   FaHome, 
   FaUserGraduate, 
@@ -19,6 +20,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const pathname = usePathname();
+  const router = useRouter(); // Initialize the router for navigation
 
   const navItems = [
     { 
@@ -51,6 +53,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     return exact ? pathname === path : pathname.startsWith(path);
   };
 
+  const handleLogout = () => {
+    // Clear authentication data (e.g., tokens)
+    localStorage.removeItem("authToken"); // Example: Remove token from localStorage
+    sessionStorage.clear(); // Clear session storage if needed
+
+    // Redirect to login page
+    router.push("/login");
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
@@ -71,7 +82,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 exit={{ opacity: 0 }}
                 className="text-xl font-bold whitespace-nowrap"
               >
-                Attendance Pro
+                SGS Attendance
               </motion.h1>
             )}
           </AnimatePresence>
@@ -119,7 +130,10 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </nav>
 
         <div className="p-4 border-t border-gray-700">
-          <button className="flex items-center gap-3 w-full p-3 text-gray-300 hover:text-white rounded-lg hover:bg-gray-800 transition-colors">
+          <button 
+            onClick={handleLogout} // Attach the logout handler
+            className="flex items-center gap-3 w-full p-3 text-gray-300 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
             <FiLogOut className="text-lg" />
             <AnimatePresence initial={false}>
               {(isOpen || isHovered) && (
