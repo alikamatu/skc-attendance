@@ -23,45 +23,40 @@ export default function AttendanceForm() {
   const [currentDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const savedAttendance = localStorage.getItem("attendanceRecords");
+    if (savedAttendance) {
+      const parsedAttendance = JSON.parse(savedAttendance);
+      setAttendance(parsedAttendance);
+
+      const signedIn = parsedAttendance
+        .filter((record: any) => record.date === currentDate && !record.signOutTime)
+        .map((record: any) => record.id);
+      setSignedInUsers(signedIn);
+    }
+  }, []);
+  useEffect(() => {
+    const fetchStudents = async () => {
       try {
         setIsLoading(true);
-  
-        // Fetch today's attendance
-        const attendanceResponse = await fetch(TODAYS_ATTENDANCE_API);
-        if (!attendanceResponse.ok) throw new Error("Failed to fetch attendance");
-        const attendanceData = await attendanceResponse.json();
-  
-        // Flatten the categorized attendance data into a single array
-        const flattenedAttendance = [
-          ...attendanceData.morning,
-          ...attendanceData.afternoon,
-          ...attendanceData.evening,
-        ];
-        setAttendance(flattenedAttendance);
-  
-        // Update signed-in users based on attendance data
-        const signedIn = flattenedAttendance
-          .filter((record: any) => !record.signOutTime)
-          .map((record: any) => record.id);
-        setSignedInUsers(signedIn);
-  
-        // Fetch students for the current session
-        const studentsResponse = await fetch(`${STUDENTS_API}?session=${session}`);
-        if (!studentsResponse.ok) throw new Error("Failed to fetch students");
-        const studentsData = await studentsResponse.json();
-        setStudents(studentsData);
+        const response = await fetch(`${STUDENTS_API}?session=${session}`);
+        if (!response.ok) throw new Error("Failed to fetch students");
+        const data = await response.json();
+        setStudents(data);
       } catch (error) {
-        console.error("Error fetching initial data:", error);
+        console.error("Error fetching students:", error);
       } finally {
         setIsLoading(false);
       }
     };
-  
-    fetchInitialData();
-  }, [session]); // Re-run when session changes
 
-  // Handle sign in
+    fetchStudents();
+  }, [session]);
+
+  // Save attendance to localStorage
+  const saveAttendanceToLocalStorage = (updatedAttendance: typeof attendance) => {
+    localStorage.setItem("attendanceRecords", JSON.stringify(updatedAttendance));
+  };
+  
   const handleSignIn = async () => {
     if (selectedUser) {
       setIsLoading(true);
@@ -85,19 +80,19 @@ export default function AttendanceForm() {
           throw new Error(errorData.error || "Failed to sign in");
         }
 
-        const newRecord = await response.json();
-        
+        const newRecord = {
+          id: selectedUser,
+          name: selectedStudent.name,
+          signInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          date: currentDate
+        };
+
+        const updatedAttendance = [...attendance, newRecord];
+        setAttendance(updatedAttendance);
         setSignedInUsers([...signedInUsers, selectedUser]);
-        setAttendance([
-          ...attendance,
-          { 
-            id: selectedUser, 
-            name: selectedStudent.name, 
-            signInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            date: currentDate
-          },
-        ]);
         setSelectedUser(null);
+        
+        saveAttendanceToLocalStorage(updatedAttendance);
       } catch (error: any) {
         alert(error.message || "Sign-in failed");
       } finally {
@@ -105,16 +100,11 @@ export default function AttendanceForm() {
       }
     }
   };
-
-  // Handle sign out
   const handleSignOut = async () => {
     if (signOutId) {
       setIsLoading(true);
       const selectedStudent = students.find(student => student.id === signOutId);
-      if (!selectedStudent) {
-        console.error("Student not found for sign-out");
-        return;
-      }
+      if (!selectedStudent) return;
 
       try {
         const response = await fetch(API_URL, {
@@ -133,18 +123,17 @@ export default function AttendanceForm() {
           throw new Error(errorData.error || "Failed to sign out");
         }
 
-        // Update the attendance record with sign-out time
-        setAttendance(attendance.map(record =>
+        const updatedAttendance = attendance.map(record =>
           record.id === signOutId && record.date === currentDate && !record.signOutTime
-            ? { 
-                ...record, 
-                signOutTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-              }
+            ? { ...record, signOutTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
             : record
-        ));
+        );
 
+        setAttendance(updatedAttendance);
         setSignedInUsers(signedInUsers.filter(id => id !== signOutId));
         setSignOutId(null);
+        
+        saveAttendanceToLocalStorage(updatedAttendance);
       } catch (error: any) {
         alert(error.message || "Sign-out failed");
       } finally {
@@ -153,12 +142,88 @@ export default function AttendanceForm() {
     }
   };
 
-  // Filter to only show today's attendance
+  const handleClearAttendance = () => {
+    setAttendance([]);
+    setSignedInUsers([]);
+    localStorage.removeItem("attendanceRecords");
+  };
+
+
   const todaysAttendance = attendance.filter(record => record.date === currentDate);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="space-y-6 w-full max-w-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 flex">
+      {/* Attendance Log Section - Now on the left */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 w-1/3 mr-6 flex flex-col"
+      >
+        <div className="flex items-center mb-4">
+          <div className="w-2 h-6 bg-green-500 rounded-full mr-3"></div>
+          <h2 className="text-xl font-semibold text-gray-800">Today's Attendance</h2>
+          <span className="ml-auto bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1 rounded-full">
+            {todaysAttendance.length} records
+          </span>
+        </div>
+        
+        {todaysAttendance.length === 0 ? (
+          <div className="text-center py-8 flex-grow flex items-center justify-center">
+            <div>
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No attendance records for today</h3>
+              <p className="mt-1 text-sm text-gray-500">Sign in students to see records here.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-gray-200 flex-grow">
+            <ul className="divide-y divide-gray-200 h-full overflow-y-auto max-h-[calc(100vh-200px)]">
+              <AnimatePresence>
+                {todaysAttendance.map((record, index) => (
+                  <motion.li
+                    key={record.id || index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className={`p-4 ${record.signOutTime ? 'bg-gray-50' : 'bg-blue-50'}`}
+                  >
+                    <div className="flex items-center">
+                      <div className={`flex-shrink-0 h-3 w-3 rounded-full ${record.signOutTime ? 'bg-gray-400' : 'bg-green-500'}`}></div>
+                      <div className="ml-3 flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-gray-900">{record.name}</p>
+                          <div className="text-xs text-gray-500">
+                            {record.signInTime}
+                            {record.signOutTime && ` → ${record.signOutTime}`}
+                          </div>
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          {record.signOutTime ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800">
+                              Signed out
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-green-100 text-green-800">
+                              Currently present
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Main Content Area - Right Side */}
+      <div className="flex-1 space-y-6 max-w-2xl">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -190,21 +255,6 @@ export default function AttendanceForm() {
             <option value="afternoon">Afternoon</option>
             <option value="evening">Evening</option>
           </select>
-
-          <h3 className="text-lg font-semibold mt-6">Students</h3>
-          {isLoading ? (
-            <p>Loading students...</p>
-          ) : students.length === 0 ? (
-            <p>No students found for the selected session.</p>
-          ) : (
-            <ul className="space-y-2">
-              {students.map((student) => (
-                <li key={student.id} className="p-4 bg-gray-50 rounded-md shadow-sm">
-                  {student.name}
-                </li>
-              ))}
-            </ul>
-          )}
           <div className="flex gap-3 mt-4">
             <select
               value={selectedUser || ""}
@@ -290,73 +340,6 @@ export default function AttendanceForm() {
               ) : "Sign Out"}
             </button>
           </div>
-        </motion.div>
-
-        {/* Attendance Log Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white p-6 rounded-xl shadow-lg border border-gray-100"
-        >
-          <div className="flex items-center mb-4">
-            <div className="w-2 h-6 bg-green-500 rounded-full mr-3"></div>
-            <h2 className="text-xl font-semibold text-gray-800">Today's Attendance</h2>
-            <span className="ml-auto bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1 rounded-full">
-              {todaysAttendance.length} records
-            </span>
-          </div>
-          
-          {todaysAttendance.length === 0 ? (
-            <div className="text-center py-8">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No attendance records for today</h3>
-              <p className="mt-1 text-sm text-gray-500">Sign in students to see records here.</p>
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-lg border border-gray-200">
-              <ul className="divide-y divide-gray-200">
-                <AnimatePresence>
-                  {todaysAttendance.map((record, index) => (
-                    <motion.li
-                      key={record.id || index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      transition={{ duration: 0.3 }}
-                      className={`p-4 ${record.signOutTime ? 'bg-gray-50' : 'bg-blue-50'}`}
-                    >
-                      <div className="flex items-center">
-                        <div className={`flex-shrink-0 h-3 w-3 rounded-full ${record.signOutTime ? 'bg-gray-400' : 'bg-green-500'}`}></div>
-                        <div className="ml-3 flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-gray-900">{record.name}</p>
-                            <div className="text-xs text-gray-500">
-                              {record.signInTime}
-                              {record.signOutTime && ` → ${record.signOutTime}`}
-                            </div>
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            {record.signOutTime ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800">
-                                Signed out
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-green-100 text-green-800">
-                                Currently present
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.li>
-                  ))}
-                </AnimatePresence>
-              </ul>
-            </div>
-          )}
         </motion.div>
       </div>
     </div>
