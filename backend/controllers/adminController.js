@@ -190,5 +190,31 @@ const addStudent = async (req, res) => {
     }
   };
 
+  const getStudentsBySession = async (req, res) => {
+    const { session } = req.query;
 
-module.exports = { loginAdmin, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats, changePassword };
+    if (!session) {
+        return res.status(400).json({ message: "Session is required" });
+    }
+
+    try {
+        const query = `
+            SELECT id, name, session
+            FROM students
+            WHERE session = $1
+            ORDER BY name ASC
+        `;
+        const { rows } = await pool.query(query, [session]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "No students found for the specified session" });
+        }
+
+        res.json(rows);
+    } catch (error) {
+        console.error("Error fetching students by session:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+module.exports = { loginAdmin, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats, changePassword, getStudentsBySession };

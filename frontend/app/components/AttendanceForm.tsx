@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const API_URL = "http://localhost:5000/api/attendance";
-const STUDENTS_API = "http://localhost:5000/api/students/fetch"; 
+const STUDENTS_API = "http://localhost:5000/api/students/students-by-session"; 
 
 export default function AttendanceForm() {
   const [students, setStudents] = useState<{ id: number; name: string }[]>([]);
+  const [session, setSession] = useState("morning");
   const [signedInUsers, setSignedInUsers] = useState<number[]>([]);
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [signOutId, setSignOutId] = useState<number | null>(null);
@@ -16,10 +17,11 @@ export default function AttendanceForm() {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await fetch(STUDENTS_API);
+        setIsLoading(true);
+        const response = await fetch(`${STUDENTS_API}?session=${session}`);
         if (!response.ok) throw new Error("Failed to fetch students.");
         const data = await response.json();
-        setStudents(data); 
+        setStudents(data);
       } catch (error) {
         console.error("Error fetching students:", error);
       } finally {
@@ -28,7 +30,7 @@ export default function AttendanceForm() {
     };
 
     fetchStudents();
-  }, []);
+  }, [session]);
 
   const handleSignIn = async () => {
     if (selectedUser) {
@@ -136,6 +138,31 @@ export default function AttendanceForm() {
             <div className="w-2 h-6 bg-blue-500 rounded-full mr-3"></div>
             <h2 className="text-xl font-semibold text-gray-800">Sign In</h2>
           </div>
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">Select Session</h2>
+        <select
+          value={session}
+          onChange={(e) => setSession(e.target.value)}
+          className="w-full p-2 border rounded"
+        >
+          <option value="morning">Morning</option>
+          <option value="afternoon">Afternoon</option>
+          <option value="evening">Evening</option>
+        </select>
+
+        <h3 className="text-lg font-semibold mt-6">Students</h3>
+        {isLoading ? (
+          <p>Loading students...</p>
+        ) : students.length === 0 ? (
+          <p>No students found for the selected session.</p>
+        ) : (
+          <ul className="space-y-2">
+            {students.map((student) => (
+              <li key={student.id} className="p-4 bg-gray-50 rounded-md shadow-sm">
+                {student.name}
+              </li>
+            ))}
+          </ul>
+        )}
           <div className="flex gap-3">
             <select
               value={selectedUser || ""}
