@@ -217,4 +217,28 @@ const addStudent = async (req, res) => {
     }
 };
 
-module.exports = { loginAdmin, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats, changePassword, getStudentsBySession };
+const getTodayAttendance = async (req, res) => {
+  try {
+    const today = getCurrentDate();
+    const result = await pool.query(
+      `SELECT a.student_id as id, a.name, 
+              TO_CHAR(a.time, 'HH24:MI') as "signInTime",
+              (SELECT TO_CHAR(b.time, 'HH24:MI') 
+               FROM attendance b 
+               WHERE b.student_id = a.student_id 
+               AND b.date = a.date 
+               AND b.action = 'sign-out') as "signOutTime",
+              a.date
+       FROM attendance a
+       WHERE a.date = $1 AND a.action = 'sign-in'
+       ORDER BY a.time DESC`,
+      [today]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { loginAdmin, getTodayAttendance, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats, changePassword, getStudentsBySession };

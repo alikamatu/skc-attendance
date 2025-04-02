@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const API_URL = "http://localhost:5000/api/attendance";
 const STUDENTS_API = "http://localhost:5000/api/students/students-by-session"; 
+const TODAYS_ATTENDANCE_API = "http://localhost:5000/api/attendance/today";
 
 export default function AttendanceForm() {
   const [students, setStudents] = useState<{ id: number; name: string }[]>([]);
@@ -11,27 +12,56 @@ export default function AttendanceForm() {
   const [signedInUsers, setSignedInUsers] = useState<number[]>([]);
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [signOutId, setSignOutId] = useState<number | null>(null);
-  const [attendance, setAttendance] = useState<{ id: number; name: string; signInTime: string; signOutTime?: string }[]>([]);
+  const [attendance, setAttendance] = useState<{ 
+    id: number; 
+    name: string; 
+    signInTime: string; 
+    signOutTime?: string;
+    date: string;
+  }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchInitialData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${STUDENTS_API}?session=${session}`);
-        if (!response.ok) throw new Error("Failed to fetch students.");
-        const data = await response.json();
-        setStudents(data);
+  
+        // Fetch today's attendance
+        const attendanceResponse = await fetch(TODAYS_ATTENDANCE_API);
+        if (!attendanceResponse.ok) throw new Error("Failed to fetch attendance");
+        const attendanceData = await attendanceResponse.json();
+  
+        // Flatten the categorized attendance data into a single array
+        const flattenedAttendance = [
+          ...attendanceData.morning,
+          ...attendanceData.afternoon,
+          ...attendanceData.evening,
+        ];
+        setAttendance(flattenedAttendance);
+  
+        // Update signed-in users based on attendance data
+        const signedIn = flattenedAttendance
+          .filter((record: any) => !record.signOutTime)
+          .map((record: any) => record.id);
+        setSignedInUsers(signedIn);
+  
+        // Fetch students for the current session
+        const studentsResponse = await fetch(`${STUDENTS_API}?session=${session}`);
+        if (!studentsResponse.ok) throw new Error("Failed to fetch students");
+        const studentsData = await studentsResponse.json();
+        setStudents(studentsData);
       } catch (error) {
-        console.error("Error fetching students:", error);
+        console.error("Error fetching initial data:", error);
       } finally {
         setIsLoading(false);
       }
     };
+  
+    fetchInitialData();
+  }, [session]); // Re-run when session changes
 
-    fetchStudents();
-  }, [session]);
-
+  // Handle sign in
   const handleSignIn = async () => {
     if (selectedUser) {
       setIsLoading(true);
@@ -46,29 +76,37 @@ export default function AttendanceForm() {
             student_id: selectedUser,
             name: selectedStudent.name,
             action: "sign-in",
+            date: currentDate,
           }),
         });
 
-        if (!response.ok) throw new Error("Failed to sign in");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to sign in");
+        }
 
+        const newRecord = await response.json();
+        
         setSignedInUsers([...signedInUsers, selectedUser]);
         setAttendance([
           ...attendance,
           { 
             id: selectedUser, 
             name: selectedStudent.name, 
-            signInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+            signInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: currentDate
           },
         ]);
         setSelectedUser(null);
-      } catch (error) {
-        console.error("Sign-in failed:", error);
+      } catch (error: any) {
+        alert(error.message || "Sign-in failed");
       } finally {
         setIsLoading(false);
       }
     }
   };
 
+  // Handle sign out
   const handleSignOut = async () => {
     if (signOutId) {
       setIsLoading(true);
@@ -86,17 +124,18 @@ export default function AttendanceForm() {
             student_id: signOutId,
             name: selectedStudent.name,
             action: "sign-out",
+            date: currentDate,
           }),
         });
 
         if (!response.ok) {
           const errorData = await response.json();
-          console.error("Sign-out failed:", errorData);
-          throw new Error("Failed to sign out");
+          throw new Error(errorData.error || "Failed to sign out");
         }
 
-        setAttendance(attendance.map((record) =>
-          record.id === signOutId && !record.signOutTime
+        // Update the attendance record with sign-out time
+        setAttendance(attendance.map(record =>
+          record.id === signOutId && record.date === currentDate && !record.signOutTime
             ? { 
                 ...record, 
                 signOutTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
@@ -106,13 +145,16 @@ export default function AttendanceForm() {
 
         setSignedInUsers(signedInUsers.filter(id => id !== signOutId));
         setSignOutId(null);
-      } catch (error) {
-        console.error("Sign-out failed:", error);
+      } catch (error: any) {
+        alert(error.message || "Sign-out failed");
       } finally {
         setIsLoading(false);
       }
     }
   };
+
+  // Filter to only show today's attendance
+  const todaysAttendance = attendance.filter(record => record.date === currentDate);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
@@ -124,7 +166,7 @@ export default function AttendanceForm() {
           className="text-center"
         >
           <h1 className="text-3xl font-bold text-gray-800">Attendance System</h1>
-          <p className="text-gray-600 mt-2">Track student sign-ins and sign-outs</p>
+          <p className="text-gray-600 mt-2">Today: {new Date(currentDate).toLocaleDateString()}</p>
         </motion.div>
 
         {/* Sign In Section */}
@@ -139,31 +181,31 @@ export default function AttendanceForm() {
             <h2 className="text-xl font-semibold text-gray-800">Sign In</h2>
           </div>
           <h2 className="text-xl font-semibold mb-4 text-gray-800">Select Session</h2>
-        <select
-          value={session}
-          onChange={(e) => setSession(e.target.value)}
-          className="w-full p-2 border rounded"
-        >
-          <option value="morning">Morning</option>
-          <option value="afternoon">Afternoon</option>
-          <option value="evening">Evening</option>
-        </select>
+          <select
+            value={session}
+            onChange={(e) => setSession(e.target.value)}
+            className="w-full p-2 border rounded"
+          >
+            <option value="morning">Morning</option>
+            <option value="afternoon">Afternoon</option>
+            <option value="evening">Evening</option>
+          </select>
 
-        <h3 className="text-lg font-semibold mt-6">Students</h3>
-        {isLoading ? (
-          <p>Loading students...</p>
-        ) : students.length === 0 ? (
-          <p>No students found for the selected session.</p>
-        ) : (
-          <ul className="space-y-2">
-            {students.map((student) => (
-              <li key={student.id} className="p-4 bg-gray-50 rounded-md shadow-sm">
-                {student.name}
-              </li>
-            ))}
-          </ul>
-        )}
-          <div className="flex gap-3">
+          <h3 className="text-lg font-semibold mt-6">Students</h3>
+          {isLoading ? (
+            <p>Loading students...</p>
+          ) : students.length === 0 ? (
+            <p>No students found for the selected session.</p>
+          ) : (
+            <ul className="space-y-2">
+              {students.map((student) => (
+                <li key={student.id} className="p-4 bg-gray-50 rounded-md shadow-sm">
+                  {student.name}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex gap-3 mt-4">
             <select
               value={selectedUser || ""}
               onChange={(e) => setSelectedUser(Number(e.target.value))}
@@ -172,7 +214,14 @@ export default function AttendanceForm() {
             >
               <option value="" disabled>Select a student</option>
               {students
-                .filter((student) => !signedInUsers.includes(student.id))
+                .filter((student) => 
+                  !signedInUsers.includes(student.id) && 
+                  !attendance.some(record => 
+                    record.id === student.id && 
+                    record.date === currentDate && 
+                    !record.signOutTime
+                  )
+                )
                 .map((student) => (
                   <option key={student.id} value={student.id}>
                     {student.name}
@@ -214,7 +263,14 @@ export default function AttendanceForm() {
             >
               <option value="" disabled>Select a student</option>
               {students
-                .filter((student) => signedInUsers.includes(student.id))
+                .filter((student) => 
+                  signedInUsers.includes(student.id) || 
+                  attendance.some(record => 
+                    record.id === student.id && 
+                    record.date === currentDate && 
+                    !record.signOutTime
+                  )
+                )
                 .map((student) => (
                   <option key={student.id} value={student.id}>
                     {student.name}
@@ -245,25 +301,25 @@ export default function AttendanceForm() {
         >
           <div className="flex items-center mb-4">
             <div className="w-2 h-6 bg-green-500 rounded-full mr-3"></div>
-            <h2 className="text-xl font-semibold text-gray-800">Attendance Log</h2>
+            <h2 className="text-xl font-semibold text-gray-800">Today's Attendance</h2>
             <span className="ml-auto bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1 rounded-full">
-              {attendance.length} records
+              {todaysAttendance.length} records
             </span>
           </div>
           
-          {attendance.length === 0 ? (
+          {todaysAttendance.length === 0 ? (
             <div className="text-center py-8">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No attendance records</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No attendance records for today</h3>
               <p className="mt-1 text-sm text-gray-500">Sign in students to see records here.</p>
             </div>
           ) : (
             <div className="overflow-hidden rounded-lg border border-gray-200">
               <ul className="divide-y divide-gray-200">
                 <AnimatePresence>
-                  {attendance.map((record, index) => (
+                  {todaysAttendance.map((record, index) => (
                     <motion.li
                       key={record.id || index}
                       initial={{ opacity: 0, y: 10 }}
