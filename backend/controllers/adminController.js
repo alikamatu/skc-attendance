@@ -160,6 +160,35 @@ const addStudent = async (req, res) => {
       res.status(500).json({ message: "Server error" });
     }
   };
+  
+
+  const changePassword = async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    const adminId = req.adminId; // Assume adminId is extracted from a JWT token
+  
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: "Old and new passwords are required" });
+    }
+  
+    try {
+      const admin = await pool.query("SELECT password FROM admins WHERE id = $1", [adminId]);
+      if (admin.rows.length === 0) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+  
+      const isMatch = await bcrypt.compare(oldPassword, admin.rows[0].password);
+      if (!isMatch) {
+        return res.status(400).json({ error: "Old password is incorrect" });
+      }
+  
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await pool.query("UPDATE admins SET password = $1 WHERE id = $2", [hashedPassword, adminId]);
+      res.status(200).json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  };
 
 
-module.exports = { loginAdmin, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats };
+module.exports = { loginAdmin, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats, changePassword };

@@ -1,16 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../config/db");
-const { loginAdmin, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats } = require("../controllers/adminController");
+const { loginAdmin, registerAdmin, addStudent, getStudent, removeStudent, getAttendanceReport, getAttendanceStats, changePassword } = require("../controllers/adminController");
+
+
 router.post("/login", loginAdmin);
 router.post("/register", registerAdmin);
-
 router.post("/students", addStudent);  
 router.post("/students/fetch", getStudent);  
 router.delete("/students/:id", removeStudent);  
 router.get("/attendance/report", getAttendanceReport); 
 router.get("/attendance/stats", getAttendanceStats); 
-
 router.get("/stats", async (req, res) => {
   try {
     const totalStudents = await pool.query("SELECT COUNT(*) FROM students");
@@ -20,7 +20,6 @@ router.get("/stats", async (req, res) => {
       "SELECT COUNT(*) FROM attendance WHERE date = CURRENT_DATE AND signed_in_at IS NOT NULL AND signed_out_at IS NULL"
     );
 
-    // Calculate session distribution
     const morning = await pool.query(
       "SELECT COUNT(*) FROM attendance WHERE EXTRACT(HOUR FROM signed_in_at) BETWEEN 6 AND 12"
     );
@@ -47,5 +46,6 @@ router.get("/stats", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+router.post("/change-password", changePassword);  
 
 module.exports = router;
