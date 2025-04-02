@@ -59,18 +59,35 @@ export default function AttendanceForm() {
   
 
 const handleSignOut = async () => {
-  if (signOutId) {  
+  if (signOutId) {
+    const selectedStudent = students.find(student => student.id === signOutId); // Find the student by ID
+    if (!selectedStudent) {
+      console.error("Student not found for sign-out");
+      return;
+    }
+
     try {
+      console.log({
+        student_id: signOutId,
+        name: selectedStudent.name, // Use the correct name
+        action: "sign-out",
+      }); // Debugging log
+
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           student_id: signOutId,
+          name: selectedStudent.name, // Pass the correct name
           action: "sign-out",
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to sign out");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Sign-out failed:", errorData);
+        throw new Error("Failed to sign out");
+      }
 
       setAttendance(attendance.map((record) =>
         record.id === signOutId && !record.signOutTime
@@ -79,7 +96,6 @@ const handleSignOut = async () => {
       ));
 
       setSignedInUsers(signedInUsers.filter(id => id !== signOutId));
-
       setSignOutId(null); // Reset selection
     } catch (error) {
       console.error("Sign-out failed:", error);
