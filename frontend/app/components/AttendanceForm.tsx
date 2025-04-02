@@ -148,7 +148,6 @@ export default function AttendanceForm() {
     localStorage.removeItem("attendanceRecords");
   };
 
-
   const todaysAttendance = attendance.filter(record => record.date === currentDate);
 
   return (
@@ -163,6 +162,12 @@ export default function AttendanceForm() {
         <div className="flex items-center mb-4">
           <div className="w-2 h-6 bg-green-500 rounded-full mr-3"></div>
           <h2 className="text-xl font-semibold text-gray-800">Today's Attendance</h2>
+          <button 
+          onClick={handleClearAttendance} 
+          className="bg-red-500 text-white px-4 py-2 rounded-md mt-2 ml-7px"
+        >
+          Clear
+        </button>
           <span className="ml-auto bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1 rounded-full">
             {todaysAttendance.length} records
           </span>
@@ -213,6 +218,7 @@ export default function AttendanceForm() {
                           )}
                         </div>
                       </div>
+                      
                     </div>
                   </motion.li>
                 ))}
