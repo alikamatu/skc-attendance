@@ -22,7 +22,7 @@ export default function AttendanceForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentDate] = useState(new Date().toISOString().split('T')[0]);
 
-  useEffect(() => {
+   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setIsLoading(true);
@@ -43,7 +43,7 @@ export default function AttendanceForm() {
         // Update signed-in users based on attendance data
         const signedIn = flattenedAttendance
           .filter((record: any) => !record.signOutTime)
-          .map((record: any) => record.id);
+          .map((record: any) => record.student_id);
         setSignedInUsers(signedIn);
   
         // Fetch students for the current session
@@ -59,9 +59,9 @@ export default function AttendanceForm() {
     };
   
     fetchInitialData();
-  }, [session]); // Re-run when session changes
+  }, [session]);
 
-  // Handle sign in
+  
   const handleSignIn = async () => {
     if (selectedUser) {
       setIsLoading(true);

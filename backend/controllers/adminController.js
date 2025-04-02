@@ -217,6 +217,10 @@ const addStudent = async (req, res) => {
     }
 };
 
+function getCurrentDate() {
+  return new Date().toISOString().split('T')[0];
+}
+
 const getTodayAttendance = async (req, res) => {
   try {
     const today = getCurrentDate();

@@ -214,41 +214,55 @@ const exportAttendanceCSV = async (req, res) => {
     }
 };
 
-
-
 const postAttendance = async (req, res) => {
+    const { student_id, name, action } = req.body;
+    const date = getCurrentDate();
+  
     try {
-        const { student_id, name, action } = req.body;
-
-        if (!student_id || !name || !action) {
-            return res.status(400).json({ error: "Missing student_id, name, or action" });
+      // For sign-in, check if student already signed in today
+      if (action === 'sign-in') {
+        const existingSignIn = await pool.query(
+          'SELECT 1 FROM attendance WHERE student_id = $1 AND date = $2 AND action = $3',
+          [student_id, date, 'sign-in']
+        );
+  
+        if (existingSignIn.rows.length > 0) {
+          return res.status(400).json({ error: 'Student already signed in today' });
         }
-
-        if (action === "sign-in") {
-            await pool.query(
-                "INSERT INTO attendance (student_id, date, status, signed_in_at, name) VALUES ($1, CURRENT_DATE, 'present', NOW(), $2)",
-                [student_id, name]
-            );
-        } else if (action === "sign-out") {
-            await pool.query(
-                `UPDATE attendance 
-                 SET signed_out_at = NOW() 
-                 WHERE id = (
-                     SELECT id 
-                     FROM attendance 
-                     WHERE student_id = $1 AND signed_out_at IS NULL 
-                     ORDER BY signed_in_at DESC 
-                     LIMIT 1
-                 )`,
-                [student_id]
-            );
+      }
+  
+      // For sign-out, check if student has signed in but not out
+      if (action === 'sign-out') {
+        const hasSignedIn = await pool.query(
+          'SELECT 1 FROM attendance WHERE student_id = $1 AND date = $2 AND action = $3',
+          [student_id, date, 'sign-in']
+        );
+  
+        if (hasSignedIn.rows.length === 0) {
+          return res.status(400).json({ error: 'Student has not signed in today' });
         }
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error("Database Insert/Update Error:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+  
+        const alreadySignedOut = await pool.query(
+          'SELECT 1 FROM attendance WHERE student_id = $1 AND date = $2 AND action = $3',
+          [student_id, date, 'sign-out']
+        );
+  
+        if (alreadySignedOut.rows.length > 0) {
+          return res.status(400).json({ error: 'Student already signed out today' });
+        }
+      }
+  
+      // Insert the attendance record
+      const result = await pool.query(
+        'INSERT INTO attendance (student_id, name, action, date) VALUES ($1, $2, $3, $4) RETURNING *',
+        [student_id, name, action, date]
+      );
+  
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
     }
-};
+  };
 
 module.exports = { postAttendance, getAttendanceHistory, exportAttendanceCSV, exportAttendancePDF };
