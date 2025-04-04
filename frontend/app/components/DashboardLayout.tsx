@@ -3,15 +3,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation"; // Import useRouter for navigation
 import { 
   FaHome, 
-  FaUserGraduate, 
   FaChartBar, 
-  FaCog, 
-  FaBars, 
-  FaSignOutAlt,
   FaChevronRight,
   FaChevronLeft
 } from "react-icons/fa";
-import { FiUsers, FiCalendar, FiSettings, FiLogOut } from "react-icons/fi";
+import { FiUsers, FiSettings, FiLogOut } from "react-icons/fi";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";

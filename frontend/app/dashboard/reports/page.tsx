@@ -45,6 +45,7 @@ export default function AttendanceReports() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch attendance");
       console.error("Fetch error:", err);
+      setDateFormat("");
     } finally {
       setIsLoading(false);
     }

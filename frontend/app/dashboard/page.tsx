@@ -251,7 +251,7 @@ export default function Dashboard() {
                   className="bg-white p-6 rounded-xl shadow-sm border border-gray-200"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                    Today's Attendance
+                    Today&#49;s Attendance
                   </h3>
                   <div className="h-48">
                     <Doughnut
