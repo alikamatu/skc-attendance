@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const API_URL = "http://localhost:5000/api/attendance";
 const STUDENTS_API = "http://localhost:5000/api/students/students-by-session"; 
-const TODAYS_ATTENDANCE_API = "http://localhost:5000/api/admin/attendance/today";
+// const TODAYS_ATTENDANCE_API = "http://localhost:5000/api/admin/attendance/today";
 
 export default function AttendanceForm() {
   const [students, setStudents] = useState<{ id: number; name: string }[]>([]);
@@ -12,29 +12,30 @@ export default function AttendanceForm() {
   const [signedInUsers, setSignedInUsers] = useState<number[]>([]);
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [signOutId, setSignOutId] = useState<number | null>(null);
-  const [attendance, setAttendance] = useState<{ 
-    id: number; 
-    name: string; 
-    signInTime: string; 
-    signOutTime?: string;
-    date: string;
-  }[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentDate] = useState(new Date().toISOString().split('T')[0]);
 
+   type AttendanceRecord = {
+    id: number;
+    name: string;
+    signInTime: string;
+    signOutTime?: string; // Optional field
+    date: string;
+  };
+  
   useEffect(() => {
     const savedAttendance = localStorage.getItem("attendanceRecords");
     if (savedAttendance) {
-      const parsedAttendance = JSON.parse(savedAttendance);
+      const parsedAttendance: AttendanceRecord[] = JSON.parse(savedAttendance);
       setAttendance(parsedAttendance);
-
+  
       const signedIn = parsedAttendance
-        .filter((record: any) => record.date === currentDate && !record.signOutTime)
-        .map((record: any) => record.id);
+        .filter((record: AttendanceRecord) => record.date === currentDate && !record.signOutTime)
+        .map((record: AttendanceRecord) => record.id);
       setSignedInUsers(signedIn);
     }
-  }, []);
-  
+  }, [currentDate]);
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -57,12 +58,12 @@ export default function AttendanceForm() {
     localStorage.setItem("attendanceRecords", JSON.stringify(updatedAttendance));
   };
   
-  const handleSignIn = async () => {
+   const handleSignIn = async () => {
     if (selectedUser) {
       setIsLoading(true);
       const selectedStudent = students.find(student => student.id === selectedUser);
       if (!selectedStudent) return;
-
+  
       try {
         const response = await fetch(API_URL, {
           method: "POST",
@@ -74,27 +75,31 @@ export default function AttendanceForm() {
             date: currentDate,
           }),
         });
-
+  
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || "Failed to sign in");
         }
-
+  
         const newRecord = {
           id: selectedUser,
           name: selectedStudent.name,
           signInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          date: currentDate
+          date: currentDate,
         };
-
+  
         const updatedAttendance = [...attendance, newRecord];
         setAttendance(updatedAttendance);
         setSignedInUsers([...signedInUsers, selectedUser]);
         setSelectedUser(null);
-        
+  
         saveAttendanceToLocalStorage(updatedAttendance);
-      } catch (error: any) {
-        alert(error.message || "Sign-in failed");
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          alert(error.message || "Sign-in failed");
+        } else {
+          alert("An unknown error occurred during sign-in");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -135,8 +140,10 @@ export default function AttendanceForm() {
         setSignOutId(null);
         
         saveAttendanceToLocalStorage(updatedAttendance);
-      } catch (error: any) {
-        alert(error.message || "Sign-out failed");
+      }catch (error: unknown) {
+        if (error instanceof Error) {
+          alert(error.message || "Sign-Out failed");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -173,7 +180,7 @@ export default function AttendanceForm() {
         >
           <div className="flex items-center mb-4">
             <div className="w-2 h-6 bg-green-500 rounded-full mr-3"></div>
-            <h2 className="text-lg md:text-xl font-semibold text-gray-800">Today's Attendance</h2>
+            <h2 className="text-lg md:text-xl font-semibold text-gray-800">Today&#49;s Attendance</h2>
             <button 
               onClick={handleClearAttendance} 
               className="bg-red-500 text-white px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-md mt-2 ml-auto"
