@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_URL = "http://localhost:5000/api/attendance";
-const STUDENTS_API = "http://localhost:5000/api/students/students-by-session"; 
-// const TODAYS_ATTENDANCE_API = "http://localhost:5000/api/admin/attendance/today";
+const API_URL = "http://localhost:1000/api/attendance";
+const STUDENTS_API = "http://localhost:1000/api/students/students-by-session"; 
+// const TODAYS_ATTENDANCE_API = "http://localhost:1000/api/admin/attendance/today";
 
 export default function AttendanceForm() {
   const [students, setStudents] = useState<{ id: number; name: string }[]>([]);

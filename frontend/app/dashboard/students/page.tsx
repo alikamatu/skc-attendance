@@ -25,7 +25,7 @@ export default function ManageStudents() {
       setIsLoading(true);
       try {
         const response = await fetch(
-          `http://localhost:5000/api/students/fetch?session=${filterSession}&page=${page}&limit=${limit}`
+          `http://localhost:1000/api/students/fetch?session=${filterSession}&page=${page}&limit=${limit}`
         );
         if (!response.ok) throw new Error("Failed to fetch students");
         const data = await response.json();
@@ -49,7 +49,7 @@ export default function ManageStudents() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/students", {
+      const response = await fetch("http://localhost:1000/api/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, session }),
@@ -79,7 +79,7 @@ export default function ManageStudents() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/students/${id}`, {
+      const response = await fetch(`http://localhost:1000/api/students/${id}`, {
         method: "DELETE",
       });
 
