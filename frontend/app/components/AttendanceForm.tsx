@@ -74,6 +74,7 @@ export default function AttendanceForm() {
           body: JSON.stringify({
             student_id: selectedUser,
             name: selectedStudent.name,
+            session,
             action: "sign-in",
             date: currentDate,
           }),
