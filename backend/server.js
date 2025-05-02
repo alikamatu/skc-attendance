@@ -9,7 +9,18 @@ const app = express();
 const port = process.env.PORT || 1000;
 
 app.use(express.json());
-app.use(cors("*"));
+const allowedOrigins = [
+  "https://skc-attendance-uhlu.vercel.app", // Frontend origin
+  "https://skc-attendance-ym6r.vercel.app" // Backend origin
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // If cookies or authentication are needed
+  })
+);
 
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/admin", adminRoutes);
