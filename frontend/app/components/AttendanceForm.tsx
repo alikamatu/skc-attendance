@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 // const API_URL = "http://localhost:1000/api/attendance";
 // const STUDENTS_API = "http://localhost:1000/api/students/students-by-session"; 
 // const TODAYS_ATTENDANCE_API = "http://localhost:1000/api/admin/attendance/today";
-const STUDENTS_API = "https://skc-attendance-ym6r.vercel.app/api/students/students-by-session"; 
-const API_URL = "https://skc-attendance-ym6r.vercel.app/api/attendance";
+const STUDENTS_API = "https://skc-attendance-46dh.vercel.app/api/students/students-by-session"; 
+const API_URL = "https://skc-attendance-46dh.vercel.app/api/attendance";
 
 
 export default function AttendanceForm() {

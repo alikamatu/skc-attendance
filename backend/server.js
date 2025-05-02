@@ -10,9 +10,9 @@ const port = process.env.PORT || 1000;
 
 app.use(express.json());
 const allowedOrigins = [
-  "https://skc-attendance-uhlu.vercel.app",
-  "http://localhost:3000", // Frontend origin
-  "https://skc-attendance-ym6r.vercel.app" // Backend origin
+  "https://skc-attendance-uhlu.vercel.app", // Frontend origin
+  "http://localhost:3000", // Local development frontend
+  "https://skc-attendance-46dh.vercel.app" // Backend origin
 ];
 
 app.use(
@@ -22,7 +22,6 @@ app.use(
     credentials: true, // If cookies or authentication are needed
   })
 );
-
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", studentRoutes);
