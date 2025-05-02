@@ -34,7 +34,7 @@ export default function AttendanceReports() {
     setIsLoading(true);
     setError("");
 
-    let url = `http://localhost:5000/api/attendance/?start=${startDate}&end=${endDate}`;
+    let url = `https://skc-backend.vercel.app/api/attendance/?start=${startDate}&end=${endDate}`;
     if (session) url += `&session=${session}`;
 
     try {
@@ -58,7 +58,7 @@ export default function AttendanceReports() {
       return;
     }
 
-    let url = `http://localhost:5000/api/attendance/export/${type}?start=${startDate}&end=${endDate}`;
+    let url = `https://skc-backend.vercel.app/api/attendance/export/${type}?start=${startDate}&end=${endDate}`;
     if (session) url += `&session=${session}`;
     if (type === "pdf") url += `&format=${dateFormat}`;
 
