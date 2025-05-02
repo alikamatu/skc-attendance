@@ -19,7 +19,7 @@ export default function SettingsPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/admin/register", {
+      const response = await fetch("https://skc-attendance-46dh.vercel.app/api/admin/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newAdmin),
@@ -60,7 +60,7 @@ export default function SettingsPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/admin/change-password", {
+      const response = await fetch("https://skc-attendance-46dh.vercel.app/api/admin/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
