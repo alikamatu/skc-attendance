@@ -31,7 +31,7 @@ export default function Dashboard() {
     totalSignIns: 0,
     totalSignOuts: 0,
     presentToday: 0,
-    recentActivity: [],
+    recentActivity: [] as { name: string; action: "sign-in" | "sign-out"; time: string }[],
     sessionDistribution: {
       morning: 0,
       afternoon: 0,
@@ -150,6 +150,7 @@ export default function Dashboard() {
       color: "bg-purple-100 text-purple-600",
     },
   ];
+
 
   return (
     <DashboardLayout>
