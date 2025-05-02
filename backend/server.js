@@ -1,10 +1,19 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 
 const app = express();
+
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: false,
+  })
+);
 
 const port = process.env.PORT || 1000;
 
