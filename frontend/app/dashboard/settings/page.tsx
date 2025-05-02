@@ -35,11 +35,12 @@ export default function SettingsPage() {
         type: "success" 
       });
       setNewAdmin({ username: "", password: "" });
-    } catch (error) {
+    }     catch (error) {
       console.error("Error adding admin:", error);
-      setMessage({ 
-        text: error.message || "Failed to add admin.", 
-        type: "error" 
+    
+      setMessage({
+        text: error instanceof Error ? error.message : "Failed to add admin.",
+        type: "error",
       });
     } finally {
       setIsLoading(false);
@@ -82,11 +83,12 @@ export default function SettingsPage() {
         newPassword: "",
         confirmPassword: "" 
       });
-    } catch (error) {
-      console.error("Error changing password:", error);
-      setMessage({ 
-        text: error.message || "Failed to change password.", 
-        type: "error" 
+    }     catch (error) {
+      console.error("Error adding admin:", error);
+    
+      setMessage({
+        text: error instanceof Error ? error.message : "Failed to add admin.",
+        type: "error",
       });
     } finally {
       setIsLoading(false);
