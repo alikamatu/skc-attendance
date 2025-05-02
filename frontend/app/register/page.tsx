@@ -7,7 +7,11 @@ const RegisterForm = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleSubmit = async (e) => {
+  interface RegisterResponse {
+    message: string;
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -18,7 +22,7 @@ const RegisterForm = () => {
       body: JSON.stringify({ username, password }),
     });
 
-    const data = await response.json();
+    const data: RegisterResponse = await response.json();
 
     if (response.ok) {
       setSuccess("Registration successful! You can now login.");
