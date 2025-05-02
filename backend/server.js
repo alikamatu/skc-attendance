@@ -10,7 +10,8 @@ const port = process.env.PORT || 1000;
 
 app.use(express.json());
 const allowedOrigins = [
-  "https://skc-attendance-uhlu.vercel.app", // Frontend origin
+  "https://skc-attendance-uhlu.vercel.app",
+  "http://localhost:3000" // Frontend origin
   "https://skc-attendance-ym6r.vercel.app" // Backend origin
 ];
 
