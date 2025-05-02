@@ -17,7 +17,7 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: "https://skc-attendance-uhlu.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true, // If cookies or authentication are needed
   })
