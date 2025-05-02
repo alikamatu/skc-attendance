@@ -45,7 +45,7 @@ export default function Dashboard() {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:1000/api/admin/stats?range=${timeRange}`);
+        const response = await fetch(`https://skc-attendance-46dh.vercel.app/api/admin/stats?range=${timeRange}`);
         if (!response.ok) throw new Error("Failed to fetch stats");
         const data = await response.json();
         setStats(data);
