@@ -30,8 +30,12 @@ export default function ManageStudents() {
         if (!response.ok) throw new Error("Failed to fetch students");
         const data = await response.json();
         setStudents(data);
-      } catch (err) {
-        setError(err.message);
+      }       catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred.");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -67,7 +71,7 @@ export default function ManageStudents() {
       setSuccess("Student added successfully!");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : "An unknown error occurred.");
       setTimeout(() => setError(""), 3000);
     } finally {
       setIsLoading(false);
@@ -89,7 +93,7 @@ export default function ManageStudents() {
       setSuccess("Student deleted successfully!");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : "An unknown error occurred.");
       setTimeout(() => setError(""), 3000);
     } finally {
       setIsLoading(false);
