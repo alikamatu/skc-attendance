@@ -7,9 +7,13 @@ const studentRoutes = require("./routes/studentRoutes");
 
 const app = express();
 
-app.use(cors({
-    origin: '*',
-}));
+app.use(
+  cors({
+    origin: "*", // Allow all origins
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: false, // Disable credentials
+  })
+);
 
 const port = process.env.PORT || 1000;
 
