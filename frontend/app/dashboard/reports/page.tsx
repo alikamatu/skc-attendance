@@ -24,7 +24,7 @@ export default function AttendanceReports() {
   const [isLoading, setIsLoading] = useState(false);
     const [branch, setBranch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [dateFormat, setDateFormat] = useState("DD MMM YYYY");
+  const [dateFormat] = useState("DD MMM YYYY");
 
   // Fetch Attendance with loading state
   const fetchAttendance = async () => {

@@ -73,12 +73,12 @@ const exportAttendancePDF = async (req, res) => {
 
         // 📌 **Table Header**
         const tableTop = doc.y;
-        const colWidths = [40, 80, 80, 80, 80, 80, 80]; // Column widths
+        const colWidths = [80, 100, 65, 65, 65, 65, 65, 65]; // Column widths
         const rowHeight = 20;
 
         const drawTableRow = (y, columns, isHeader = false) => {
             doc.font(isHeader ? "Helvetica-Bold" : "Helvetica").fontSize(10);
-            let x = 50;
+            let x = 10;
             columns.forEach((text, i) => {
                 doc.text(text, x, y, { width: colWidths[i], align: "center" });
                 x += colWidths[i];
@@ -86,13 +86,13 @@ const exportAttendancePDF = async (req, res) => {
         };
 
         // 📌 **Draw Header Row**
-        doc.rect(50, tableTop, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
+        doc.rect(30, tableTop, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
         drawTableRow(tableTop + 7, ["ID", "Student", "Date", "Sign In", "Sign Out", "Status", "Session", "Branch"], true);
 
         // 📌 **Draw Table Data**
         let y = tableTop + rowHeight;
         rows.forEach((record) => {
-            doc.rect(50, y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke();
+            doc.rect(30, y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke();
             drawTableRow(y + 7, [
                 record.id.toString(),
                 record.student_name,
