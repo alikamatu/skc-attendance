@@ -7,6 +7,7 @@ interface Student {
   id: number;
   name: string;
   session: string;
+  branch: string;
 }
 
 export default function ManageStudents() {
@@ -16,6 +17,7 @@ export default function ManageStudents() {
   const [filterSession, setFilterSession] = useState("");
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [branch, setBranch] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const limit = 5;
@@ -45,29 +47,31 @@ export default function ManageStudents() {
   }, [filterSession, page]);
 
   const handleAddStudent = async () => {
-    if (!name || !session) {
-      setError("Please enter both name and session");
+    console.log("Branch selected:", branch); // Debugging the branch value
+    if (!name || !session || !branch) {
+      setError("Please enter name, session, and branch");
       setTimeout(() => setError(""), 3000);
       return;
     }
-
+  
     setIsLoading(true);
     try {
       const response = await fetch("https://skc-attendance-46dh.vercel.app/api/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, session }),
+        body: JSON.stringify({ name, session, branch }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to add student");
       }
-
+  
       const newStudent = await response.json();
       setStudents((prev) => [...prev, newStudent]);
       setName("");
       setSession("");
+      setBranch(""); // Reset branch
       setSuccess("Student added successfully!");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
@@ -137,6 +141,19 @@ export default function ManageStudents() {
                 <option value="morning">Morning</option>
                 <option value="afternoon">Afternoon</option>
                 <option value="evening">Evening</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+              <select
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={branch}
+                onChange={(e) => setBranch(e.target.value)} // Ensure this updates the state
+              >
+                <option value="">Select Branch</option>
+                <option value="Tema">Tema</option>
+                <option value="Mataheko">Mataheko</option>
               </select>
             </div>
             
@@ -229,6 +246,7 @@ export default function ManageStudents() {
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
@@ -243,6 +261,7 @@ export default function ManageStudents() {
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{student.session}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{student.branch}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button
                               onClick={() => handleDeleteStudent(student.id)}

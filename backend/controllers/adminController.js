@@ -94,29 +94,28 @@ const getStudent = async (req, res) => {
 
 
 const addStudent = async (req, res) => {
-    try {
-        const { name, session } = req.body;
-        
-        if (!name || !session) {
-            return res.status(400).json({ message: "Name and session are required" });
-        }
+  try {
+    const { name, session, branch } = req.body;
+    console.log("Branch received:", branch);
 
-        const allowedSessions = ["morning", "afternoon", "evening"];
-        const normalizedSession = session.toLowerCase(); // Convert to lowercase
-
-        if (!allowedSessions.includes(normalizedSession)) {
-            return res.status(400).json({ message: "Invalid session. Allowed values: morning, afternoon, evening" });
-        }
-
-        const query = "INSERT INTO students (name, session) VALUES ($1, $2) RETURNING *";
-        const values = [name, normalizedSession];
-
-        const result = await pool.query(query, values);
-        res.status(201).json(result.rows[0]);
-    } catch (error) {
-        console.error("❌ Error adding student:", error);
-        res.status(500).json({ message: "Server error" });
+    if (!name || !session || !branch) {
+      return res.status(400).json({ message: "Name, session, and branch are required" });
     }
+
+    const allowedBranches = ["Tema", "Mataheko"];
+    if (!allowedBranches.includes(branch)) {
+      return res.status(400).json({ message: "Invalid branch. Allowed values are 'Tema' and 'Mataheko'." });
+    }
+
+    const query = "INSERT INTO students (name, session, branch) VALUES ($1, $2, $3) RETURNING *";
+    const values = [name, session, branch];
+
+    const result = await pool.query(query, values);
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("Error adding student:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
   const removeStudent = async (req, res) => {
