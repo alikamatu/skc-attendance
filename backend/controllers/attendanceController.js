@@ -73,7 +73,7 @@ const exportAttendancePDF = async (req, res) => {
 
         // 📌 **Table Header**
         const tableTop = doc.y;
-        const colWidths = [80, 100, 65, 65, 65, 65, 65, 65]; // Column widths
+        const colWidths = [40, 100, 65, 65, 65, 65, 65, 65]; // Column widths
         const rowHeight = 20;
 
         const drawTableRow = (y, columns, isHeader = false) => {
