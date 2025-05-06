@@ -18,7 +18,7 @@ const formatTime = (timestamp) => {
 };
 
 const exportAttendancePDF = async (req, res) => {
-    const { start, end, session, format = "DD MMM YYYY" } = req.query;
+    const { start, end, session, branch, format = "DD MMM YYYY" } = req.query;
 
     if (!start || !end) {
         return res.status(400).json({ message: "Start and end dates are required" });
@@ -32,7 +32,7 @@ const exportAttendancePDF = async (req, res) => {
             TO_CHAR(a.date, '${dateFormatSQL}') AS date,
             TO_CHAR(a.signed_in_at, 'HH12:MI AM') AS signed_in_at,
             TO_CHAR(a.signed_out_at, 'HH12:MI AM') AS signed_out_at,
-            a.status, s.session
+            a.status, s.session, s.branch
             FROM attendance a 
             JOIN students s ON a.student_id = s.id
             WHERE a.date BETWEEN $1 AND $2
@@ -43,6 +43,11 @@ const exportAttendancePDF = async (req, res) => {
             query += " AND s.session = $3";
             values.push(session);
         }
+
+        if (branch) {
+            query += session ? " AND branch = $4" : " AND branch = $3";
+            values.push(branch);
+          }
 
         query += " ORDER BY a.date ASC";
         const { rows } = await pool.query(query, values);
@@ -82,7 +87,7 @@ const exportAttendancePDF = async (req, res) => {
 
         // 📌 **Draw Header Row**
         doc.rect(50, tableTop, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
-        drawTableRow(tableTop + 7, ["ID", "Student", "Date", "Sign In", "Sign Out", "Status", "Session"], true);
+        drawTableRow(tableTop + 7, ["ID", "Student", "Date", "Sign In", "Sign Out", "Status", "Session", "Branch"], true);
 
         // 📌 **Draw Table Data**
         let y = tableTop + rowHeight;
@@ -96,6 +101,7 @@ const exportAttendancePDF = async (req, res) => {
                 record.signed_out_at || "N/A",
                 record.status,
                 record.session || "N/A",
+                record.branch || "N/A",
             ]);
             y += rowHeight;
         });
@@ -116,7 +122,7 @@ const exportAttendancePDF = async (req, res) => {
 
 
 const getAttendanceHistory = async (req, res) => {
-  const { start, end, session, page = 1, limit = 10 } = req.query;
+  const { start, end, session, branch, page = 1, limit = 10 } = req.query;
   const offset = (page - 1) * limit;
 
   if (!start || !end) {
@@ -125,7 +131,7 @@ const getAttendanceHistory = async (req, res) => {
 
   try {
       let query = `
-          SELECT a.id, s.name AS student_name, a.date, a.signed_in_at, a.signed_out_at, a.status, s.session
+          SELECT a.id, s.name AS student_name, a.date, a.signed_in_at, a.signed_out_at, a.status, s.session, s.branch
           FROM attendance a 
           JOIN students s ON a.student_id = s.id
           WHERE a.date BETWEEN $1::DATE AND $2::DATE
@@ -136,6 +142,11 @@ const getAttendanceHistory = async (req, res) => {
       if (session) {
           query += " AND s.session = $3::TEXT";
           values.push(session);
+      }
+
+      if (branch) {
+        query += session ? " AND branch = $4" : " AND branch = $3";
+        values.push(branch);
       }
 
       query += ` ORDER BY a.date ASC LIMIT $${values.length + 1}::INT OFFSET $${values.length + 2}::INT`;
@@ -150,7 +161,7 @@ const getAttendanceHistory = async (req, res) => {
 };
 
 const exportAttendanceCSV = async (req, res) => {
-    const { start, end, session } = req.query;
+    const { start, end, session, branch } = req.query;
 
     if (!start || !end) {
         return res.status(400).json({ message: "Start and end dates are required" });
@@ -158,7 +169,7 @@ const exportAttendanceCSV = async (req, res) => {
 
     try {
         let query = `
-            SELECT a.id, s.name AS student_name, a.date, a.signed_in_at, a.signed_out_at, a.status, s.session
+            SELECT a.id, s.name AS student_name, a.date, a.signed_in_at, a.signed_out_at, a.status, s.session, s.branch
             FROM attendance a 
             JOIN students s ON a.student_id = s.id
             WHERE a.date BETWEEN $1::DATE AND $2::DATE

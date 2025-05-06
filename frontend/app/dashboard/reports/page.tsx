@@ -12,6 +12,7 @@ interface Attendance {
   signed_out_at: string | null;
   status: string;
   session: string;
+  branch: string;
 }
 
 export default function AttendanceReports() {
@@ -21,6 +22,7 @@ export default function AttendanceReports() {
   const [error, setError] = useState("");
   const [session, setSession] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+    const [branch, setBranch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [dateFormat, setDateFormat] = useState("DD MMM YYYY");
 
@@ -30,13 +32,14 @@ export default function AttendanceReports() {
       setError("Please select a start and end date");
       return;
     }
-
+  
     setIsLoading(true);
     setError("");
-
-    let url = `https://skc-attendance-46dh.vercel.app/api/attendance/?start=${startDate}&end=${endDate}`;
+  
+    let url = `http://localhost:1000/api/attendance/?start=${startDate}&end=${endDate}`;
     if (session) url += `&session=${session}`;
-
+    if (branch) url += `&branch=${branch}`; // Add branch to the query
+  
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error(await res.text());
@@ -45,7 +48,6 @@ export default function AttendanceReports() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch attendance");
       console.error("Fetch error:", err);
-      setDateFormat("");
     } finally {
       setIsLoading(false);
     }
@@ -58,8 +60,10 @@ export default function AttendanceReports() {
       return;
     }
 
-    let url = `https://skc-attendance-46dh.vercel.app/api/attendance/export/${type}?start=${startDate}&end=${endDate}`;
+    let url = `http://localhost:1000/api/attendance/export/${type}?start=${startDate}&end=${endDate}`;
+    // let url = `https://skc-attendance-46dh.vercel.app/api/attendance/export/${type}?start=${startDate}&end=${endDate}`;
     if (session) url += `&session=${session}`;
+    if (branch) url += `&branch=${branch}`;
     if (type === "pdf") url += `&format=${dateFormat}`;
 
     try {
@@ -159,6 +163,19 @@ export default function AttendanceReports() {
                 <option value="evening">Evening</option>
               </select>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+              <select
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={branch}
+                onChange={(e) => setBranch(e.target.value)}
+              >
+                <option value="">All Branches</option>
+                <option value="Tema">Tema</option>
+                <option value="Mataheko">Mataheko</option>
+              </select>
+            </div>
             
             <div className="flex items-end">
               <button
@@ -228,6 +245,7 @@ export default function AttendanceReports() {
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sign In</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sign Out</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -239,6 +257,7 @@ export default function AttendanceReports() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{record.student_name}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(record.date)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{record.session}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{record.branch}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatTime(record.signed_in_at)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatTime(record.signed_out_at)}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
