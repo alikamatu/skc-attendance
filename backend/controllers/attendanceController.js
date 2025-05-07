@@ -56,7 +56,6 @@ const exportAttendancePDF = async (req, res) => {
             return res.status(404).json({ message: "No attendance records found." });
         }
 
-        // ✅ Ensure the 'exports' directory exists
         const exportPath = path.join(__dirname, "../exports");
         if (!fs.existsSync(exportPath)) {
             fs.mkdirSync(exportPath, { recursive: true });
@@ -67,11 +66,9 @@ const exportAttendancePDF = async (req, res) => {
         const stream = fs.createWriteStream(filePath);
         doc.pipe(stream);
 
-        // 📌 **Title & Date Range**
         doc.font("Helvetica-Bold").fontSize(18).text("Attendance Report", { align: "center" }).moveDown(1);
         doc.font("Helvetica").fontSize(12).text(`From: ${start} To: ${end}`, { align: "center" }).moveDown(2);
 
-        // 📌 **Table Header**
         const tableTop = doc.y;
         const colWidths = [40, 100, 65, 65, 65, 65, 65, 65]; // Column widths
         const rowHeight = 20;
@@ -85,11 +82,9 @@ const exportAttendancePDF = async (req, res) => {
             });
         };
 
-        // 📌 **Draw Header Row**
         doc.rect(30, tableTop, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
         drawTableRow(tableTop + 7, ["ID", "Student", "Date", "Sign In", "Sign Out", "Status", "Session", "Branch"], true);
 
-        // 📌 **Draw Table Data**
         let y = tableTop + rowHeight;
         rows.forEach((record) => {
             doc.rect(30, y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke();

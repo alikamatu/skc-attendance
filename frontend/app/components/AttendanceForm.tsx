@@ -1,10 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import StudentSearchFilter from "./StudentSearchFilter";
+import StudentSelectionModal from "./StudentSelectedModal";
 
-// const API_URL = "http://localhost:1000/api/attendance";
-// const STUDENTS_API = "http://localhost:1000/api/students/students-by-session"; 
-// const TODAYS_ATTENDANCE_API = "http://localhost:1000/api/admin/attendance/today";
 const STUDENTS_API = "https://skc-attendance-46dh.vercel.app/api/students/students-by-session"; 
 const API_URL = "https://skc-attendance-46dh.vercel.app/api/attendance";
 
@@ -17,6 +16,8 @@ export default function AttendanceForm() {
   const [signOutId, setSignOutId] = useState<number | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentDate] = useState(new Date().toISOString().split('T')[0]);
 
    type AttendanceRecord = {
@@ -60,6 +61,11 @@ export default function AttendanceForm() {
   const saveAttendanceToLocalStorage = (updatedAttendance: typeof attendance) => {
     localStorage.setItem("attendanceRecords", JSON.stringify(updatedAttendance));
   };
+
+  const filteredStudents = students.filter((student) =>
+    student.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  console.log("Filtered students:", filteredStudents); // Debugging filtered students
   
    const handleSignIn = async () => {
     if (selectedUser) {
@@ -263,9 +269,8 @@ export default function AttendanceForm() {
               <div className="w-2 h-5 md:h-6 bg-blue-500 rounded-full mr-2 md:mr-3"></div>
               <h2 className="text-lg md:text-xl font-semibold text-gray-800">Sign In</h2>
             </div>
-            
-            <div className="space-y-3 md:space-y-4">
-              <div>
+
+            <div>
                 <label className="block text-sm md:text-base font-medium text-gray-700 mb-1">Select Session</label>
                 <select
                   value={session}
@@ -277,6 +282,32 @@ export default function AttendanceForm() {
                   <option value="evening">Evening</option>
                 </select>
               </div>
+
+            <StudentSearchFilter searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="w-full bg-blue-600 text-white py-2 mb-4 rounded-lg hover:bg-blue-700"
+        >
+          {selectedUser ? "Change Student" : "Select a Student"}
+        </button>
+
+        <StudentSelectionModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          students={filteredStudents.filter(
+            (student) =>
+              !signedInUsers.includes(student.id) &&
+              !attendance.some(
+                (record) =>
+                  record.id === student.id &&
+                  record.date === currentDate &&
+                  !record.signOutTime
+              )
+          )}
+          onSelect={(id) => setSelectedUser(id)}
+        />
+
+            <div className="space-y-3 md:space-y-4">
               
               <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
                 <div className="flex-1">
