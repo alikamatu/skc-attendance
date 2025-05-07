@@ -176,7 +176,7 @@ export default function AttendanceForm() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-6 md:mb-8"
       >
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Attendance System</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">SKC Attendance System</h1>
         <p className="text-gray-600 mt-1 md:mt-2">Today: {new Date(currentDate).toLocaleDateString()}</p>
       </motion.div>
 
