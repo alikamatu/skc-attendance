@@ -62,7 +62,7 @@ const exportAttendancePDF = async (req, res) => {
         }
 
         const filePath = path.join(exportPath, "attendance_report.pdf");
-        const doc = new PDFDocument({ margin: 50 });
+        const doc = new PDFDocument({ margin: 30 });
         const stream = fs.createWriteStream(filePath);
         doc.pipe(stream);
 
@@ -70,7 +70,7 @@ const exportAttendancePDF = async (req, res) => {
         doc.font("Helvetica").fontSize(12).text(`From: ${start} To: ${end}`, { align: "center" }).moveDown(2);
 
         const tableTop = doc.y;
-        const colWidths = [40, 100, 65, 65, 65, 65, 65, 65]; // Column widths
+        const colWidths = [65, 80, 65, 65, 65, 65, 65, 65]; // Column widths
         const rowHeight = 20;
 
         const drawTableRow = (y, columns, isHeader = false) => {
