@@ -14,6 +14,7 @@ import {
 } from "chart.js";
 import { FiUsers, FiLogIn, FiLogOut, FiUserCheck } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 ChartJS.register(
   CategoryScale,
@@ -40,6 +41,15 @@ export default function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("today");
+    const router = useRouter();
+  
+
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+      }
+    }, []);
 
   useEffect(() => {
     const fetchStats = async () => {

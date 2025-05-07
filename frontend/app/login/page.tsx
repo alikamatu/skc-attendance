@@ -4,6 +4,7 @@ import axios from "axios";
 import { FiUser, FiLock, FiAlertCircle, FiLoader } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const LoginForm = () => {
   const [username, setUsername] = useState("");
@@ -11,6 +12,13 @@ const LoginForm = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      router.push("/dashboard");
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +32,7 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/admin/login", { 
+      const res = await axios.post("http://localhost:1000/api/admin/login", { 
         username, 
         password 
       }, {

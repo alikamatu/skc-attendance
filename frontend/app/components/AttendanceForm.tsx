@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import StudentSearchFilter from "./StudentSearchFilter";
 import StudentSelectionModal from "./StudentSelectedModal";
+import Link from "next/link";
 
 const STUDENTS_API = "https://skc-attendance-46dh.vercel.app/api/students/students-by-session"; 
 const API_URL = "https://skc-attendance-46dh.vercel.app/api/attendance";
@@ -178,6 +179,9 @@ export default function AttendanceForm() {
       >
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">SKC Attendance System</h1>
         <p className="text-gray-600 mt-1 md:mt-2">Today: {new Date(currentDate).toLocaleDateString()}</p>
+        <Link href="/login" className="text-blue-500 hover:underline mt-2 inline-block">
+          Admin Login
+        </Link>
       </motion.div>
 
       <div className="flex flex-col lg:flex-row gap-6">
