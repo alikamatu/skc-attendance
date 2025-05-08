@@ -24,7 +24,7 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const res = await axios.post("https://skc-attendance-46dh.vercel.app/api/admin/login", { 
+      const res = await axios.post("https://skc-attendance-backend.vercel.app/api/admin/login", { 
         username, 
         password 
       }, {

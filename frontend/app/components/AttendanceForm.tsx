@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import StudentSearchFilter from "./StudentSearchFilter";
 import StudentSelectionModal from "./StudentSelectedModal";
 import Link from "next/link";
+import { FaUser } from "react-icons/fa";
 
-const STUDENTS_API = "https://skc-attendance-46dh.vercel.app/api/students/students-by-session"; 
-const API_URL = "https://skc-attendance-46dh.vercel.app/api/attendance";
+const STUDENTS_API = "https://skc-attendance-backend.vercel.app/api/students/students-by-session"; 
+const API_URL = "https://skc-attendance-backend.vercel.app/api/attendance";
 
 
 export default function AttendanceForm() {
@@ -171,7 +172,6 @@ export default function AttendanceForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
-      {/* Header - Now at the top for better mobile flow */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -179,7 +179,8 @@ export default function AttendanceForm() {
       >
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">SKC Attendance System</h1>
         <p className="text-gray-600 mt-1 md:mt-2">Today: {new Date(currentDate).toLocaleDateString()}</p>
-        <Link href="/login" className="text-blue-500 hover:underline mt-2 inline-block">
+        <Link href="/login" className="text-black mt-2 inline-block md:fixed top-4 right-4 bg-white p-2 rounded-full shadow-lg hover:bg-white/30 hover:cursor-pointer hover:top-3.5 duration-200">
+        <FaUser size={40} className="inline mr-1 bg-black/20 p-1 text-black rounded-full" />
           Admin Login
         </Link>
       </motion.div>

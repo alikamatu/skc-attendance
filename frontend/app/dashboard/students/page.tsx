@@ -27,7 +27,7 @@ export default function ManageStudents() {
       setIsLoading(true);
       try {
         const response = await fetch(
-          `https://skc-attendance-46dh.vercel.app/api/students/fetch?session=${filterSession}&page=${page}&limit=${limit}`
+          `https://skc-attendance-backend.vercel.app/api/students/fetch?session=${filterSession}&page=${page}&limit=${limit}`
         );
         if (!response.ok) throw new Error("Failed to fetch students");
         const data = await response.json();
@@ -56,7 +56,7 @@ export default function ManageStudents() {
   
     setIsLoading(true);
     try {
-      const response = await fetch("https://skc-attendance-46dh.vercel.app/api/students", {
+      const response = await fetch("https://skc-attendance-backend.vercel.app/api/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, session, branch }),
@@ -87,7 +87,7 @@ export default function ManageStudents() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`https://skc-attendance-46dh.vercel.app/api/students/${id}`, {
+      const response = await fetch(`https://skc-attendance-backend.vercel.app/api/students/${id}`, {
         method: "DELETE",
       });
 
