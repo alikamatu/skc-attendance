@@ -18,10 +18,6 @@ const formatTime = (timestamp) => {
 };
 
 const exportAttendancePDF = async (req, res) => {
-res.setHeader("Content-Type", "application/pdf");
-res.setHeader("Content-Disposition", "attachment; filename=attendance_report.pdf");
-pdfDoc.pipe(res);
-pdfDoc.end();
     const { start, end, session, branch, format = "DD MMM YYYY" } = req.query;
 
     if (!start || !end) {
@@ -60,7 +56,7 @@ pdfDoc.end();
             return res.status(404).json({ message: "No attendance records found." });
         }
 
-        const exportPath = path.join(__dirname, "../exports");
+        const exportPath = path.join(__dirname, "/tmp");
         if (!fs.existsSync(exportPath)) {
             fs.mkdirSync(exportPath, { recursive: true });
         }
