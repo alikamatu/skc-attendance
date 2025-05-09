@@ -18,6 +18,10 @@ const formatTime = (timestamp) => {
 };
 
 const exportAttendancePDF = async (req, res) => {
+res.setHeader("Content-Type", "application/pdf");
+res.setHeader("Content-Disposition", "attachment; filename=attendance_report.pdf");
+pdfDoc.pipe(res);
+pdfDoc.end();
     const { start, end, session, branch, format = "DD MMM YYYY" } = req.query;
 
     if (!start || !end) {
