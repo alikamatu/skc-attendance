@@ -50,8 +50,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleLogout = () => {
-    // Clear authentication data (e.g., tokens)
-    localStorage.removeItem("authToken"); // Example: Remove token from localStorage
     sessionStorage.clear(); // Clear session storage if needed
 
     // Redirect to login page
