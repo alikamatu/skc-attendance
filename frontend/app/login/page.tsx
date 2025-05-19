@@ -32,7 +32,7 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:1000/api/admin/login", { 
+      const res = await axios.post("https://skc-backend.vercel.app/api/admin/login", { 
         username, 
         password 
       }, {
