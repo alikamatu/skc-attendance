@@ -78,7 +78,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 exit={{ opacity: 0 }}
                 className="text-xl font-bold whitespace-nowrap"
               >
-                SGS Attendance
+                SKCF Attendance
               </motion.h1>
             )}
           </AnimatePresence>
