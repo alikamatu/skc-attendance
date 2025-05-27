@@ -19,7 +19,7 @@ const fontOutfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "SKC Attendance System",
+  title: "SKCF Attendance System",
   description: "A modern and efficient attendance management system for students and administrators.",
   keywords: "attendance, student management, SKC, attendance tracking, education, admin dashboard",
   viewport: "width=device-width, initial-scale=1.0",
