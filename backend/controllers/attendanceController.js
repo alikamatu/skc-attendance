@@ -32,7 +32,7 @@ const exportAttendancePDF = async (req, res) => {
             TO_CHAR(a.date, '${dateFormatSQL}') AS date,
             TO_CHAR(a.signed_in_at, 'HH12:MI AM') AS signed_in_at,
             TO_CHAR(a.signed_out_at, 'HH12:MI AM') AS signed_out_at,
-            a.status, s.session, s.branch
+            a.comment, s.session, s.branch
             FROM attendance a 
             JOIN students s ON a.student_id = s.id
             WHERE a.date BETWEEN $1 AND $2
@@ -83,7 +83,7 @@ const exportAttendancePDF = async (req, res) => {
         };
 
         doc.rect(30, tableTop, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
-        drawTableRow(tableTop + 7, ["ID", "Student", "Date", "Sign In", "Sign Out", "Status", "Session", "Branch"], true);
+        drawTableRow(tableTop + 7, ["ID", "Student", "Date", "Sign In", "Sign Out", "Signed Out By", "Session", "Branch"], true);
 
         let y = tableTop + rowHeight;
         rows.forEach((record) => {
@@ -94,7 +94,7 @@ const exportAttendancePDF = async (req, res) => {
                 record.date,
                 record.signed_in_at || "N/A",
                 record.signed_out_at || "N/A",
-                record.status,
+                record.comment,
                 record.session || "N/A",
                 record.branch || "N/A",
             ]);
@@ -126,7 +126,7 @@ const getAttendanceHistory = async (req, res) => {
 
   try {
       let query = `
-          SELECT a.id, s.name AS student_name, a.date, a.signed_in_at, a.signed_out_at, a.status, s.session, s.branch
+          SELECT a.id, s.name AS student_name, a.date, a.signed_in_at, a.signed_out_at, a.comment, s.session, s.branch
           FROM attendance a 
           JOIN students s ON a.student_id = s.id
           WHERE a.date BETWEEN $1::DATE AND $2::DATE
@@ -164,7 +164,7 @@ const exportAttendanceCSV = async (req, res) => {
 
     try {
         let query = `
-            SELECT a.id, s.name AS student_name, a.date, a.signed_in_at, a.signed_out_at, a.status, s.session, s.branch
+            SELECT a.id, s.name AS student_name, a.date, a.signed_in_at, a.signed_out_at, a.comment, s.session, s.branch
             FROM attendance a 
             JOIN students s ON a.student_id = s.id
             WHERE a.date BETWEEN $1::DATE AND $2::DATE
@@ -201,7 +201,7 @@ const exportAttendanceCSV = async (req, res) => {
                 Date: row.date,
                 Signed_In: row.signed_in_at || "N/A",
                 Signed_Out: row.signed_out_at || "N/A",
-                Status: row.status
+                Status: row.comment || "N/A",
             });
         });
 
@@ -232,7 +232,7 @@ const postAttendance = async (req, res) => {
 
         if (action === "sign-in") {
             await pool.query(
-                "INSERT INTO attendance (student_id, date, status, signed_in_at, name) VALUES ($1, CURRENT_DATE, 'present', NOW(), $2)",
+                "INSERT INTO attendance (student_id, date, comment, signed_in_at, name) VALUES ($1, CURRENT_DATE, 'present', NOW(), $2)",
                 [student_id, name]
             );
         } else if (action === "sign-out") {
