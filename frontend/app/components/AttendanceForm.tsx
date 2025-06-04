@@ -407,7 +407,7 @@ export default function AttendanceForm() {
 {signOutId && (
   <div className="mt-2">
     <label className="block text-sm font-medium text-gray-700 mb-1">
-      Comment (required)
+      Who is signing you out? (required)
     </label>
     <textarea
       value={signOutComment}
@@ -415,7 +415,7 @@ export default function AttendanceForm() {
       className="w-full p-2 border rounded text-sm"
       rows={2}
       required
-      placeholder="Enter a comment about your sign out..."
+      placeholder="Dad, Mom, or Guardian name"
       disabled={isLoading}
     />
   </div>
