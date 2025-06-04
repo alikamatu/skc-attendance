@@ -5,9 +5,11 @@ import StudentSearchFilter from "./StudentSearchFilter";
 import StudentSelectionModal from "./StudentSelectedModal";
 import Link from "next/link";
 import { FaUser } from "react-icons/fa";
+import { stat } from "fs";
 
 const STUDENTS_API = "https://skc-attendance-backend.vercel.app/api/students/students-by-session"; 
-const API_URL = "https://skc-attendance-backend.vercel.app/api/attendance";
+// const API_URL = "https://skc-attendance-backend.vercel.app/api/attendance";
+const API_URL = "http://localhost:1000/api/attendance";
 
 
 export default function AttendanceForm() {
@@ -30,6 +32,7 @@ export default function AttendanceForm() {
     signOutTime?: string;
     date: string;
     comment?: string;
+    status?: string; // Optional status field
   };
   
   useEffect(() => {
@@ -87,6 +90,7 @@ export default function AttendanceForm() {
             session,
             action: "sign-in",
             date: currentDate,
+            status: "present",
           }),
         });
   
@@ -140,6 +144,7 @@ export default function AttendanceForm() {
           action: "sign-out",
           date: currentDate,
           comment: signOutComment,
+          status: "signed-out",
         }),
       });
 
