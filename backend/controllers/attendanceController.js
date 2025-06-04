@@ -224,7 +224,7 @@ const exportAttendanceCSV = async (req, res) => {
 
 const postAttendance = async (req, res) => {
     try {
-        const { student_id, name, action } = req.body;
+        const { student_id, name, action, comment } = req.body; // <-- accept comment
 
         if (!student_id || !name || !action) {
             return res.status(400).json({ error: "Missing student_id, name, or action" });
@@ -238,7 +238,7 @@ const postAttendance = async (req, res) => {
         } else if (action === "sign-out") {
             await pool.query(
                 `UPDATE attendance 
-                 SET signed_out_at = NOW() 
+                 SET signed_out_at = NOW(), comment = $2
                  WHERE id = (
                      SELECT id 
                      FROM attendance 
@@ -246,7 +246,7 @@ const postAttendance = async (req, res) => {
                      ORDER BY signed_in_at DESC 
                      LIMIT 1
                  )`,
-                [student_id]
+                [student_id, comment] // <-- pass comment as $2
             );
         }
 

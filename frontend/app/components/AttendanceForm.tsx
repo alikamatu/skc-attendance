@@ -20,6 +20,7 @@ export default function AttendanceForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [signOutComment, setSignOutComment] = useState("");
   const [currentDate] = useState(new Date().toISOString().split('T')[0]);
 
    type AttendanceRecord = {
@@ -28,6 +29,7 @@ export default function AttendanceForm() {
     signInTime: string;
     signOutTime?: string;
     date: string;
+    comment?: string;
   };
   
   useEffect(() => {
@@ -118,49 +120,55 @@ export default function AttendanceForm() {
     }
   };
 
-  const handleSignOut = async () => {
-    if (signOutId) {
-      setIsLoading(true);
-      const selectedStudent = students.find(student => student.id === signOutId);
-      if (!selectedStudent) return;
-
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            student_id: signOutId,
-            name: selectedStudent.name,
-            action: "sign-out",
-            date: currentDate,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to sign out");
-        }
-
-        const updatedAttendance = attendance.map(record =>
-          record.id === signOutId && record.date === currentDate && !record.signOutTime
-            ? { ...record, signOutTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-            : record
-        );
-
-        setAttendance(updatedAttendance);
-        setSignedInUsers(signedInUsers.filter(id => id !== signOutId));
-        setSignOutId(null);
-        
-        saveAttendanceToLocalStorage(updatedAttendance);
-      }catch (error: unknown) {
-        if (error instanceof Error) {
-          alert(error.message || "Sign-Out failed");
-        }
-      } finally {
-        setIsLoading(false);
-      }
+ const handleSignOut = async () => {
+  if (signOutId) {
+    if (!signOutComment.trim()) {
+      alert("Please enter a comment before signing out.");
+      return;
     }
-  };
+    setIsLoading(true);
+    const selectedStudent = students.find(student => student.id === signOutId);
+    if (!selectedStudent) return;
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: signOutId,
+          name: selectedStudent.name,
+          action: "sign-out",
+          date: currentDate,
+          comment: signOutComment,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to sign out");
+      }
+
+      const updatedAttendance = attendance.map(record =>
+        record.id === signOutId && record.date === currentDate && !record.signOutTime
+          ? { ...record, signOutTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), comment: signOutComment }
+          : record
+      );
+
+      setAttendance(updatedAttendance);
+      setSignedInUsers(signedInUsers.filter(id => id !== signOutId));
+      setSignOutId(null);
+      setSignOutComment(""); // Clear comment
+
+      saveAttendanceToLocalStorage(updatedAttendance);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message || "Sign-Out failed");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
+};
 
   const handleClearAttendance = () => {
     setAttendance([]);
@@ -367,44 +375,65 @@ export default function AttendanceForm() {
               <h2 className="text-lg md:text-xl font-semibold text-gray-800">Sign Out</h2>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
-              <div className="flex-1">
-                <select
-                  value={signOutId || ""}
-                  onChange={(e) => setSignOutId(Number(e.target.value))}
-                  className="w-full p-2 md:p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm md:text-base"
-                  disabled={isLoading}
-                >
-                  <option value="" disabled>Select a student</option>
-                  {students
-                    .filter((student) => 
-                      signedInUsers.includes(student.id) || 
-                      attendance.some(record => 
-                        record.id === student.id && 
-                        record.date === currentDate && 
-                        !record.signOutTime
-                      )
-                    )
-                    .map((student) => (
-                      <option key={student.id} value={student.id}>
-                        {student.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-              <button 
-                onClick={handleSignOut} 
-                disabled={!signOutId || isLoading}
-                className="px-3 py-2 md:px-5 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 transition-colors flex items-center justify-center text-sm md:text-base"
-              >
-                {isLoading ? (
-                  <svg className="animate-spin h-4 w-4 md:h-5 md:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : "Sign Out"}
-              </button>
-            </div>
+           <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
+  <div className="flex-1">
+    <select
+      value={signOutId || ""}
+      onChange={(e) => {
+        setSignOutId(Number(e.target.value));
+        setSignOutComment(""); // Reset comment when changing student
+      }}
+      className="w-full p-2 md:p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm md:text-base"
+      disabled={isLoading}
+    >
+      <option value="" disabled>Select a student</option>
+      {students
+        .filter((student) => 
+          signedInUsers.includes(student.id) || 
+          attendance.some(record => 
+            record.id === student.id && 
+            record.date === currentDate && 
+            !record.signOutTime
+          )
+        )
+        .map((student) => (
+          <option key={student.id} value={student.id}>
+            {student.name}
+          </option>
+        ))}
+    </select>
+  </div>
+</div>
+{signOutId && (
+  <div className="mt-2">
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Comment (required)
+    </label>
+    <textarea
+      value={signOutComment}
+      onChange={(e) => setSignOutComment(e.target.value)}
+      className="w-full p-2 border rounded text-sm"
+      rows={2}
+      required
+      placeholder="Enter a comment about your sign out..."
+      disabled={isLoading}
+    />
+  </div>
+)}
+<div className="flex flex-col sm:flex-row gap-2 md:gap-3 mt-2">
+  <button 
+    onClick={handleSignOut} 
+    disabled={!signOutId || !signOutComment.trim() || isLoading}
+    className="px-3 py-2 md:px-5 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 transition-colors flex items-center justify-center text-sm md:text-base"
+  >
+    {isLoading ? (
+      <svg className="animate-spin h-4 w-4 md:h-5 md:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    ) : "Sign Out"}
+  </button>
+</div>
           </motion.div>
         </div>
       </div>
