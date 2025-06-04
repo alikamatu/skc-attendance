@@ -84,7 +84,7 @@ export default function AttendanceReports() {
   };
 
   // Filter attendance by status
-  const filteredAttendance = attendance.filter(record => {
+  const filteredAttendance = attendance.filter(() => {
     if (activeTab === "all") return true;
     return true;
   });
