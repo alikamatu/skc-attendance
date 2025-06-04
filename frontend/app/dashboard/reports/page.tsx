@@ -10,7 +10,7 @@ interface Attendance {
   date: string;
   signed_in_at: string | null;
   signed_out_at: string | null;
-  status: string;
+  comment: string;
   session: string;
   branch: string;
 }
@@ -36,7 +36,8 @@ export default function AttendanceReports() {
     setIsLoading(true);
     setError("");
   
-    let url = `https://skc-attendance.onrender.com/api/attendance/?start=${startDate}&end=${endDate}`;
+    let url = `http://localhost:1000/api/attendance/?start=${startDate}&end=${endDate}`;
+    // let url = `https://skc-attendance.onrender.com/api/attendance/?start=${startDate}&end=${endDate}`;
     if (session) url += `&session=${session}`;
     if (branch) url += `&branch=${branch}`; // Add branch to the query
   
@@ -60,7 +61,7 @@ export default function AttendanceReports() {
       return;
     }
 
-    let url = `https://skc-attendance.onrender.com/api/attendance/export/${type}?start=${startDate}&end=${endDate}`;
+    let url = `http://localhost:1000/api/attendance/export/${type}?start=${startDate}&end=${endDate}`;
     if (session) url += `&session=${session}`;
     if (branch) url += `&branch=${branch}`;
     if (type === "pdf") url += `&format=${dateFormat}`;
@@ -86,8 +87,6 @@ export default function AttendanceReports() {
   // Filter attendance by status
   const filteredAttendance = attendance.filter(record => {
     if (activeTab === "all") return true;
-    if (activeTab === "present") return record.status === "present";
-    if (activeTab === "completed") return record.status === "completed";
     return true;
   });
 
@@ -219,7 +218,7 @@ export default function AttendanceReports() {
               <FiUser />
               All Records ({attendance.length})
             </button>
-            <button
+            {/* <button
               onClick={() => setActiveTab("present")}
               className={`px-4 py-3 font-medium text-sm flex items-center gap-2 ${activeTab === "present" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:text-gray-700"}`}
             >
@@ -232,7 +231,7 @@ export default function AttendanceReports() {
             >
               <FiUser />
               Completed ({attendance.filter(r => r.status === "completed").length})
-            </button>
+            </button> */}
           </div>
 
           {/* Attendance Table */}
@@ -247,7 +246,7 @@ export default function AttendanceReports() {
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sign In</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sign Out</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Signed Out By</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -259,13 +258,14 @@ export default function AttendanceReports() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{record.branch}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatTime(record.signed_in_at)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatTime(record.signed_out_at)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.comment}</td>
+                      {/* <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           record.status === "present" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
                         }`}>
                           {record.status}
                         </span>
-                      </td>
+                      </td> */}
                     </tr>
                   ))}
                 </tbody>

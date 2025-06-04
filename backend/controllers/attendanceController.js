@@ -47,7 +47,7 @@ const exportAttendancePDF = async (req, res) => {
         if (branch) {
             query += session ? " AND branch = $4" : " AND branch = $3";
             values.push(branch);
-          }
+        }
 
         query += " ORDER BY a.date ASC";
         const { rows } = await pool.query(query, values);
@@ -61,31 +61,32 @@ const exportAttendancePDF = async (req, res) => {
             fs.mkdirSync(exportPath, { recursive: true });
         }
 
+        // Set PDF to landscape
         const filePath = path.join(exportPath, "attendance_report.pdf");
-        const doc = new PDFDocument({ margin: 30 });
+        const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' }); // <-- landscape
         const stream = fs.createWriteStream(filePath);
         doc.pipe(stream);
 
         doc.font("Helvetica-Bold").fontSize(18).text("Attendance Report", { align: "center" }).moveDown(1);
         doc.font("Helvetica").fontSize(12).text(`From: ${start} To: ${end}`, { align: "center" }).moveDown(2);
 
-        const tableTop = doc.y;
-        const colWidths = [65, 80, 65, 65, 65, 65, 65, 65]; // Column widths
-        const rowHeight = 20;
+        // Adjust column widths for landscape and long names
+        const colWidths = [50, 180, 70, 70, 70, 120, 70, 70]; // Name column is wider
+        const rowHeight = auto;
 
         const drawTableRow = (y, columns, isHeader = false) => {
             doc.font(isHeader ? "Helvetica-Bold" : "Helvetica").fontSize(10);
             let x = 10;
             columns.forEach((text, i) => {
-                doc.text(text, x, y, { width: colWidths[i], align: "center" });
+                doc.text(text, x, y, { width: colWidths[i], align: "center", ellipsis: true });
                 x += colWidths[i];
             });
         };
 
-        doc.rect(30, tableTop, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
-        drawTableRow(tableTop + 7, ["ID", "Student", "Date", "Sign In", "Sign Out", "Signed Out By", "Session", "Branch"], true);
+        doc.rect(30, doc.y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
+        drawTableRow(doc.y + 7, ["ID", "Student", "Date", "Sign In", "Sign Out", "Signed Out By", "Session", "Branch"], true);
 
-        let y = tableTop + rowHeight;
+        let y = doc.y + rowHeight;
         rows.forEach((record) => {
             doc.rect(30, y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke();
             drawTableRow(y + 7, [
