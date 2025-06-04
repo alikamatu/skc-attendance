@@ -64,7 +64,7 @@ export default function AttendanceReports() {
     let url = `http://localhost:1000/api/attendance/export/${type}?start=${startDate}&end=${endDate}`;
     if (session) url += `&session=${session}`;
     if (branch) url += `&branch=${branch}`;
-    if (type === "pdf") url += `&format=${dateFormat}`;
+    if (type === "csv") url += `&format=${dateFormat}`;
 
     try {
       const response = await fetch(url);

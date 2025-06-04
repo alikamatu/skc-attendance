@@ -63,7 +63,7 @@ const exportAttendancePDF = async (req, res) => {
 
         // Set PDF to landscape
         const filePath = path.join(exportPath, "attendance_report.pdf");
-        const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' }); // <-- landscape
+        const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' }); // <-- landscape
         const stream = fs.createWriteStream(filePath);
         doc.pipe(stream);
 
@@ -72,11 +72,11 @@ const exportAttendancePDF = async (req, res) => {
 
         // Adjust column widths for landscape and long names
         const colWidths = [50, 180, 70, 70, 70, 120, 70, 70]; // Name column is wider
-        const rowHeight = auto;
+        const rowHeight = 20;
 
         const drawTableRow = (y, columns, isHeader = false) => {
             doc.font(isHeader ? "Helvetica-Bold" : "Helvetica").fontSize(10);
-            let x = 10;
+            let x = 15;
             columns.forEach((text, i) => {
                 doc.text(text, x, y, { width: colWidths[i], align: "center", ellipsis: true });
                 x += colWidths[i];
@@ -84,13 +84,13 @@ const exportAttendancePDF = async (req, res) => {
         };
 
         doc.rect(30, doc.y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
-        drawTableRow(doc.y + 7, ["ID", "Student", "Date", "Sign In", "Sign Out", "Signed Out By", "Session", "Branch"], true);
-
+        drawTableRow(doc.y + 7, ["No.", "Student", "Date", "Sign In", "Sign Out", "Signed Out By", "Session", "Branch"], true);
+        
         let y = doc.y + rowHeight;
-        rows.forEach((record) => {
+        rows.forEach((record, idx) => {
             doc.rect(30, y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke();
             drawTableRow(y + 7, [
-                record.id.toString(),
+                (idx + 1).toString(), 
                 record.student_name,
                 record.date,
                 record.signed_in_at || "N/A",
