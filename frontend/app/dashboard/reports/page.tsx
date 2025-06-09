@@ -60,9 +60,9 @@ export default function AttendanceReports() {
       return;
     }
 
-    let url = `https://skc-attendance.onrender.com/api/attendance/export/${type}?start=${startDate}&end=${endDate}`;
+    let url = `http://localhost:1000/api/attendance/export/${type}?start=${startDate}&end=${endDate}`;
     if (session) url += `&session=${session}`;
-    // if (branch) url += `&branch=${branch}`;
+    if (branch) url += `&branch=${branch}`;
     if (type === "csv") url += `&format=${dateFormat}`;
 
     try {

@@ -26,7 +26,6 @@ const exportAttendancePDF = async (req, res) => {
 
     try {
         let dateFormatSQL = format === "MM/DD/YYYY" ? "MM/DD/YYYY" : "DD Mon YYYY";
-
         let query = `
             SELECT a.id, s.name AS student_name, 
             TO_CHAR(a.date, '${dateFormatSQL}') AS date,
@@ -37,20 +36,24 @@ const exportAttendancePDF = async (req, res) => {
             JOIN students s ON a.student_id = s.id
             WHERE a.date BETWEEN $1 AND $2
         `;
-
         const values = [start, end];
+        let paramIndex = 3;
+
         if (session) {
-            query += " AND s.session = $3";
+            query += ` AND s.session = $${paramIndex}`;
             values.push(session);
+            paramIndex++;
         }
 
         if (branch) {
-            query += session ? " AND branch = $4" : " AND branch = $3";
+            query += ` AND s.branch = $${paramIndex}`;
             values.push(branch);
+            paramIndex++;
         }
 
         query += " ORDER BY a.date ASC";
         const { rows } = await pool.query(query, values);
+
 
         if (!rows.length) {
             return res.status(404).json({ message: "No attendance records found." });
@@ -66,6 +69,12 @@ const exportAttendancePDF = async (req, res) => {
         const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' }); // <-- landscape
         const stream = fs.createWriteStream(filePath);
         doc.pipe(stream);
+        const maxY = doc.page.height - 40; // 40 is bottom margin
+
+        const drawTableHeader = (y) => {
+            doc.rect(30, y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
+            drawTableRow(y + 7, ["No.", "Student", "Date", "Sign In", "Sign Out", "Signed Out By", "Session", "Branch"], true);
+        };
 
         doc.font("Helvetica-Bold").fontSize(18).text("Attendance Report", { align: "center" }).moveDown(1);
         doc.font("Helvetica").fontSize(12).text(`From: ${start} To: ${end}`, { align: "center" }).moveDown(2);
@@ -83,14 +92,23 @@ const exportAttendancePDF = async (req, res) => {
             });
         };
 
-        doc.rect(30, doc.y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
-        drawTableRow(doc.y + 7, ["No.", "Student", "Date", "Sign In", "Sign Out", "Signed Out By", "Session", "Branch"], true);
+        // doc.rect(30, doc.y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke("#000");
+        // drawTableRow(doc.y + 7, ["No.", "Student", "Date", "Sign In", "Sign Out", "Signed Out By", "Session", "Branch"], true);
         
         let y = doc.y + rowHeight;
+        drawTableHeader(doc.y);
+
         rows.forEach((record, idx) => {
+            // If next row would overflow, add a new page and redraw header
+            if (y + rowHeight > maxY) {
+                doc.addPage({ margin: 40, size: 'A4', layout: 'landscape' });
+                y = 40; // Reset y to top margin
+                drawTableHeader(y - rowHeight); // Draw header at top of new page
+                y += rowHeight;
+            }
             doc.rect(30, y, colWidths.reduce((a, b) => a + b, 0), rowHeight).stroke();
             drawTableRow(y + 7, [
-                (idx + 1).toString(), 
+                (idx + 1).toString(),
                 record.student_name,
                 record.date,
                 record.signed_in_at || "N/A",
@@ -225,7 +243,7 @@ const exportAttendanceCSV = async (req, res) => {
 
 const postAttendance = async (req, res) => {
     try {
-        const { student_id, name, action, comment } = req.body; // <-- accept comment
+        const { student_id, name, action, comment, status } = req.body; // <-- accept comment
 
         if (!student_id || !name || !action) {
             return res.status(400).json({ error: "Missing student_id, name, or action" });
@@ -233,7 +251,7 @@ const postAttendance = async (req, res) => {
 
         if (action === "sign-in") {
             await pool.query(
-                "INSERT INTO attendance (student_id, date, comment, signed_in_at, name) VALUES ($1, CURRENT_DATE, 'present', NOW(), $2)",
+                "INSERT INTO attendance (student_id, date, status, signed_in_at, name) VALUES ($1, CURRENT_DATE, 'present', NOW(), $2)",
                 [student_id, name]
             );
         } else if (action === "sign-out") {
@@ -247,7 +265,7 @@ const postAttendance = async (req, res) => {
                      ORDER BY signed_in_at DESC 
                      LIMIT 1
                  )`,
-                [student_id, comment] // <-- pass comment as $2
+                [student_id, comment]
             );
         }
 

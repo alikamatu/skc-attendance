@@ -9,7 +9,7 @@ import { stat } from "fs";
 
 const STUDENTS_API = "https://skc-attendance-backend.vercel.app/api/students/students-by-session"; 
 // const API_URL = "https://skc-attendance-backend.vercel.app/api/attendance";
-const API_URL = "http://localhost:1000/api/attendance";
+const API_URL = "https://skc-attendance-backend.vercel.app/api/attendance";
 
 
 export default function AttendanceForm() {
