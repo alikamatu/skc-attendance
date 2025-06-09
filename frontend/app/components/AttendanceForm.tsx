@@ -5,7 +5,6 @@ import StudentSearchFilter from "./StudentSearchFilter";
 import StudentSelectionModal from "./StudentSelectedModal";
 import Link from "next/link";
 import { FaUser } from "react-icons/fa";
-import { stat } from "fs";
 
 const STUDENTS_API = "https://skc-attendance-backend.vercel.app/api/students/students-by-session"; 
 // const API_URL = "https://skc-attendance-backend.vercel.app/api/attendance";
