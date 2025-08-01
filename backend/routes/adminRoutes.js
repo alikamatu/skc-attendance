@@ -27,7 +27,7 @@ router.get("/stats", async (req, res) => {
     const afternoon = await pool.query(
       "SELECT COUNT(*) FROM attendance WHERE EXTRACT(HOUR FROM signed_in_at) BETWEEN 12 AND 18"
     );
-    const evening = await pool.query(
+    const summer = await pool.query(
       "SELECT COUNT(*) FROM attendance WHERE EXTRACT(HOUR FROM signed_in_at) BETWEEN 18 AND 24"
     );
 
@@ -39,7 +39,7 @@ router.get("/stats", async (req, res) => {
       sessionDistribution: {
         morning: parseInt(morning.rows[0].count),
         afternoon: parseInt(afternoon.rows[0].count),
-        evening: parseInt(evening.rows[0].count),
+        summer: parseInt(summer.rows[0].count),
       },
     });
   } catch (error) {

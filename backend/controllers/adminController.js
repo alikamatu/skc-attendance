@@ -229,7 +229,7 @@ const getTodayAttendance = async (req, res) => {
         const categorized = {
             morning: [],
             afternoon: [],
-            evening: [],
+            summer: [],
         };
 
         rows.forEach((record) => {
@@ -239,7 +239,7 @@ const getTodayAttendance = async (req, res) => {
             } else if (hour >= 12 && hour < 18) {
                 categorized.afternoon.push(record);
             } else {
-                categorized.evening.push(record);
+                categorized.summer.push(record);
             }
         });
 
