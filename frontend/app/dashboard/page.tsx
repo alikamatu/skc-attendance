@@ -36,7 +36,7 @@ export default function Dashboard() {
     sessionDistribution: {
       morning: 0,
       afternoon: 0,
-      evening: 0
+      summer: 0
     }
   });
   const [loading, setLoading] = useState(true);
@@ -111,13 +111,13 @@ export default function Dashboard() {
   };
 
   const sessionData = {
-    labels: ["Morning", "Afternoon", "Evening"],
+    labels: ["Morning", "Afternoon", "Summer"],
     datasets: [
       {
         data: [
           stats.sessionDistribution.morning,
           stats.sessionDistribution.afternoon,
-          stats.sessionDistribution.evening,
+          stats.sessionDistribution.summer,
         ],
         backgroundColor: [
           "rgba(255, 206, 86, 0.7)",

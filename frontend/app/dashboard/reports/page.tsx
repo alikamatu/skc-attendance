@@ -157,7 +157,7 @@ export default function AttendanceReports() {
                 <option value="">All Sessions</option>
                 <option value="morning">Morning</option>
                 <option value="afternoon">Afternoon</option>
-                <option value="evening">Evening</option>
+                <option value="summer">Summer</option>
               </select>
             </div>
 

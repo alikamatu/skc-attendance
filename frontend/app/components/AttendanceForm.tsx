@@ -31,7 +31,7 @@ export default function AttendanceForm() {
     signOutTime?: string;
     date: string;
     comment?: string;
-    status?: string; // Optional status field
+    status?: string;
   };
   
   useEffect(() => {
@@ -296,7 +296,7 @@ export default function AttendanceForm() {
                 >
                   <option value="morning">Morning</option>
                   <option value="afternoon">Afternoon</option>
-                  <option value="evening">Evening</option>
+                  <option value="summer">Summer</option>
                 </select>
               </div>
 
