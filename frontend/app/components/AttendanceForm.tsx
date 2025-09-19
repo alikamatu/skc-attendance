@@ -210,7 +210,7 @@ export default function AttendanceForm() {
             <h2 className="text-lg md:text-xl font-semibold text-gray-800">Today&apos;s Attendance</h2>
             <button 
               onClick={handleClearAttendance} 
-              className="bg-red-500 text-white px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-md mt-2 ml-auto"
+              className="hidden bg-red-500 text-white px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-md mt-2 ml-auto"
             >
               Clear
             </button>
