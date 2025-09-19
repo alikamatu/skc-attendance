@@ -16,3 +16,61 @@ model User {
   password String
   role     String @default("customer") @db.VarChar
 }
+
+model Student {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(100)
+  session   Session
+  createdAt DateTime? @default(now()) @map("created_at")
+  branch    Branch    @default(Tema)
+
+  attendance Attendance[]
+}
+
+model Attendance {
+  id          Int                @id @default(autoincrement())
+  studentId   Int                @map("student_id")
+  student     Student            @relation(fields: [studentId], references: [id])
+  name        String             @db.VarChar(100)
+  session     AttendanceSession?
+  date        DateTime           @db.Date
+  signedInAt  DateTime?          @map("signed_in_at")
+  signedOutAt DateTime?          @map("signed_out_at")
+  status      AttendanceStatus?
+  createdAt   DateTime?          @default(now()) @map("created_at")
+  comment     String?
+
+  @@map("attendance")
+}
+
+model Admin {
+  id        Int       @id @default(autoincrement())
+  username  String    @db.VarChar(50)
+  password  String    @db.VarChar(255)
+  createdAt DateTime? @default(now()) @map("created_at")
+
+  @@map("admins")
+}
+
+enum Branch {
+  Tema
+  Mataheko
+}
+
+enum Session {
+  morning
+  afternoon
+  summer
+}
+
+enum AttendanceSession {
+  morning
+  afternoon
+  evening
+}
+
+enum AttendanceStatus {
+  present
+  completed
+  absent
+}

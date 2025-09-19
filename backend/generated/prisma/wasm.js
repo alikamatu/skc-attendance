@@ -128,6 +128,34 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role'
 };
 
+exports.Prisma.StudentScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  session: 'session',
+  createdAt: 'createdAt',
+  branch: 'branch'
+};
+
+exports.Prisma.AttendanceScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  name: 'name',
+  session: 'session',
+  date: 'date',
+  signedInAt: 'signedInAt',
+  signedOutAt: 'signedOutAt',
+  status: 'status',
+  createdAt: 'createdAt',
+  comment: 'comment'
+};
+
+exports.Prisma.AdminScalarFieldEnum = {
+  id: 'id',
+  username: 'username',
+  password: 'password',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -138,9 +166,38 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+exports.Session = exports.$Enums.Session = {
+  morning: 'morning',
+  afternoon: 'afternoon',
+  summer: 'summer'
+};
+
+exports.Branch = exports.$Enums.Branch = {
+  Tema: 'Tema',
+  Mataheko: 'Mataheko'
+};
+
+exports.AttendanceSession = exports.$Enums.AttendanceSession = {
+  morning: 'morning',
+  afternoon: 'afternoon',
+  evening: 'evening'
+};
+
+exports.AttendanceStatus = exports.$Enums.AttendanceStatus = {
+  present: 'present',
+  completed: 'completed',
+  absent: 'absent'
+};
 
 exports.Prisma.ModelName = {
-  User: 'User'
+  User: 'User',
+  Student: 'Student',
+  Attendance: 'Attendance',
+  Admin: 'Admin'
 };
 
 /**
